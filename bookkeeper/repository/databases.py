@@ -2,22 +2,37 @@
 Module with sqlite3 database structure
 """
 
-from pony import orm
+import pony.orm as pny
 
-expenses_db = orm.Database()
+db = pny.Database()
 
-class Expense(expenses_db.Entity):
-    pk = orm.PrimaryKey(int, auto=True)
-    amount = orm.Required(float)
-    category = orm.Optional(int)
-    comment = orm.Optional(str, 50)
-    added_date = orm.Required(str, 15)
-    expense_data = orm.Optional(str, 10)
+class DatabaseHelper():
+    @staticmethod
+    def get_table_by_name(name: str) -> type:
+        if name == 'Expense':
+            return Expense
+        elif name == 'Category':
+            return Category
 
+class Expense(db.Entity):
+    pk = pny.PrimaryKey(int, auto=True)
+    amount = pny.Required(float)
+    category = pny.Required(int)
+    comment = pny.Optional(str, 50)
+    added_date = pny.Required(str, 30)
+    expense_date = pny.Optional(str, 30)
 
-category_db = orm.Database()
+    def get_data(self):
+        return {
+            'pk': self.pk,
+            'amount': self.amount,
+            'category': self.category,
+            'comment': self.comment,
+            'added_date': self.added_date,
+            'expense_date': self.expense_date
+        }
 
-class Category(category_db.Entity):
-    pk = orm.PrimaryKey(int, auto=True)
-    parent = orm.Required(int)
-    name = orm.Required(str, 20)
+class Category(db.Entity):
+    pk = pny.PrimaryKey(int, auto=True)
+    parent = pny.Required(int)
+    name = pny.Required(str, 20)
