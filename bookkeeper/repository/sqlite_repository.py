@@ -2,10 +2,8 @@
 Module for repository working with sqlite3 database
 """
 
-from itertools import count
 from typing import Any
 from inspect import get_annotations
-import datetime
 
 from pony import orm
 
@@ -27,11 +25,11 @@ class SQLiteRepository(AbstractRepository[T]):
         self.data_cls_fields.pop('pk')
 
     @staticmethod
-    def bind_database(db_filename: str = 'database.db'):
+    def bind_database(db_filename: str = 'database.db') -> None:
         """ Bind database to db in file <db_filename> """
-        my_dbs.db.bind(provider='sqlite', 
-                        filename=db_filename,
-                        create_db=True)
+        my_dbs.db.bind(provider='sqlite',
+                       filename=db_filename,
+                       create_db=True)
 
         my_dbs.db.generate_mapping(create_tables=True)
 
@@ -41,10 +39,10 @@ class SQLiteRepository(AbstractRepository[T]):
             raise ValueError(f'trying to add object {obj} with filled `pk` attribute')
 
         kwargs = {
-            f: py2sqlite_type_converter(getattr(obj, f)) 
+            f: py2sqlite_type_converter(getattr(obj, f))
             for f in self.data_cls_fields.keys()
         }
-        db_obj = my_dbs.Expense(**kwargs)
+        db_obj = self.table_cls(**kwargs)
         orm.commit()
 
         obj.pk = db_obj.pk
@@ -66,9 +64,8 @@ class SQLiteRepository(AbstractRepository[T]):
 
         db_obj = self.table_cls[obj.pk]
 
-        for f in self.data_cls_fields.keys():
-            setattr(db_obj, f, py2sqlite_type_converter(getattr(obj, f)))
-
+        for field in self.data_cls_fields.keys():
+            setattr(db_obj, field, py2sqlite_type_converter(getattr(obj, field)))
 
     @orm.db_session
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
@@ -85,16 +82,18 @@ class SQLiteRepository(AbstractRepository[T]):
         # return objects accroding to condition
         attr1, value1 = list(where.items())[0]  # first condition
         # can not put all conditions inside a query, so use at least one condition
-        db_objs_lst = orm.select(p for p in self.table_cls if getattr(p, attr1) == value1)[:]
+        db_objs_lst = orm.select(p for p in self.table_cls
+                                 if getattr(p, attr1) == value1)[:]
         # apply all conditions
-        db_objs_lst = [p for p in db_objs_lst if all([getattr(p, attr) == value for (attr, value) in where.items()])]
+        db_objs_lst = [p for p in db_objs_lst
+                       if all(getattr(p, attr) == value
+                              for (attr, value) in where.items())]
 
         objs_lst = []
         for db_obj in db_objs_lst:
             objs_lst.append(self.data_cls(**db_obj.get_data()))
 
         return objs_lst
-
 
     @orm.db_session
     def delete(self, pk: int) -> None:

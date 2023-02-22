@@ -62,7 +62,14 @@ def read_tree(lines: Iterable[str]) -> list[tuple[str, str | None]]:
         last_indent = indent
     return result
 
+
+NONE_2_INT_CHANGER = -1000
+
+
 def py2sqlite_type_converter(smth: Any) -> Any:
+    """ Convert python types to sqlite3 types """
+    if isinstance(smth, type(None)):
+        return NONE_2_INT_CHANGER
     if type(smth) in [int, float, str]:
         return smth
 
