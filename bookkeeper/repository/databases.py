@@ -3,6 +3,7 @@ Module with sqlite3 database structure
 """
 
 import pony.orm as pny
+from datetime import datetime
 
 db = pny.Database()
 
@@ -28,10 +29,9 @@ class Expense(db.Entity):
             'amount': self.amount,
             'category': self.category,
             'comment': self.comment,
-            'added_date': self.added_date,
-            'expense_date': self.expense_date
+            'added_date': datetime.strptime(self.added_date, "%Y-%m-%d %H:%M:%S.%f"),
+            'expense_date': datetime.strptime(self.expense_date, "%Y-%m-%d %H:%M:%S.%f")
         }
-
 class Category(db.Entity):
     pk = pny.PrimaryKey(int, auto=True)
     parent = pny.Required(int)

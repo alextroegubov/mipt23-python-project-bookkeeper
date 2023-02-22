@@ -19,19 +19,20 @@ class SQLiteRepository(AbstractRepository[T]):
     SQLite3 repository
     """
     def __init__(self, data_cls: type,
-                 table_name: str, 
-                 db_filename: str = 'database.db') -> None:
-
-        my_dbs.db.bind(provider='sqlite', 
-                        filename=db_filename,
-                        create_db=True)
-
-        my_dbs.db.generate_mapping(create_tables=True)
+                 table_name: str) -> None:
 
         self.table_cls = my_dbs.DatabaseHelper.get_table_by_name(table_name)
         self.data_cls = data_cls
         self.data_cls_fields = get_annotations(self.data_cls, eval_str=True)
         self.data_cls_fields.pop('pk')
+
+    @staticmethod
+    def bind_database(db_filename: str = 'database.db'):
+        my_dbs.db.bind(provider='sqlite', 
+                        filename=db_filename,
+                        create_db=True)
+
+        my_dbs.db.generate_mapping(create_tables=True)
 
     @orm.db_session
     def add(self, obj: T) -> int:
@@ -44,16 +45,18 @@ class SQLiteRepository(AbstractRepository[T]):
         }
         db_obj = my_dbs.Expense(**kwargs)
         orm.commit()
-        return db_obj.pk
+
+        obj.pk = db_obj.pk
+        return obj.pk
 
     @orm.db_session
     def get(self, pk: int) -> T | None:
-        db_obj = orm.select(p for p in self.table_cls if p.pk == pk)[:]
+        try:
+            db_obj = self.table_cls[pk]
+            return self.data_cls(**db_obj.get_data())
 
-        if len(db_obj) == 0:  # no such a primary key
+        except orm.ObjectNotFound:
             return None
-
-        return self.data_cls(**db_obj[0].get_data())
 
     @orm.db_session
     def update(self, obj: T) -> None:
@@ -63,19 +66,34 @@ class SQLiteRepository(AbstractRepository[T]):
         db_obj = self.table_cls[obj.pk]
 
         for f in self.data_cls_fields.keys():
-            setattr(db_obj, f, getattr(obj, f))
+            setattr(db_obj, f, py2sqlite_type_converter(getattr(obj, f)))
 
+
+    @orm.db_session
     def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
-        pass
 
+        if where is None:  # return all objects from the table
+            db_objs_lst = orm.select(p for p in self.table_cls)[:]
+
+            objs_lst = []
+            for db_obj in db_objs_lst:
+                objs_lst.append(self.data_cls(**db_obj.get_data()))
+
+            return objs_lst
+        # return objects accroding to condition
+        db_objs_lst = orm.select(p for p in self.table_cls 
+            if all(getattr(p, attr) == value for (attr, value) in where.items()))
+
+        objs_lst = []
+        for db_obj in db_objs_lst:
+            objs_lst.append(self.data_cls(**db_obj.get_data()))
+
+        return objs_lst
+
+
+    @orm.db_session
     def delete(self, pk: int) -> None:
-        pass
-
-    # @orm.db_session
-    # def get_all(self, where: dict[str, Any] | None = None) -> list[T]:
-    #     if where is None:
-    #         res_lst = orm.select(p for p in )
-
-    #         return list(self._container.values())
-    #     return [obj for obj in self._container.values()
-    #             if all(getattr(obj, attr) == value for attr, value in where.items())]
+        try:
+            self.table_cls[pk].delete()
+        except orm.ObjectNotFound:
+            pass
