@@ -66,6 +66,17 @@ def test_cannot_add_without_pk(repo_expense):
     with pytest.raises(ValueError):
         repo_expense.add(0)
 
+def test_get_all_with_condition(repo_expense):
+    objs = []
+
+    for i in range(5):
+        p = Expense(amount=random.randint(1, 10), 
+                    category=10,
+                    comment=str(i))
+        repo_expense.add(p)
+        objs.append(p)
+    assert repo_expense.get_all({'comment': '0', 'category': 10}) == [objs[0]]
+    assert repo_expense.get_all({'category': 10}) == objs
 
 # def test_cannot_update_without_pk(repo, custom_class):
 #     obj = custom_class()
@@ -78,15 +89,3 @@ def test_cannot_add_without_pk(repo_expense):
 #     for o in objects:
 #         repo.add(o)
 #     assert repo.get_all() == objects
-
-
-# def test_get_all_with_condition(repo, custom_class):
-#     objects = []
-#     for i in range(5):
-#         o = custom_class()
-#         o.name = str(i)
-#         o.test = 'test'
-#         repo.add(o)
-#         objects.append(o)
-#     assert repo.get_all({'name': '0'}) == [objects[0]]
-#     assert repo.get_all({'test': 'test'}) == objects

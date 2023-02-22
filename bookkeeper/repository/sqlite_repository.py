@@ -28,6 +28,7 @@ class SQLiteRepository(AbstractRepository[T]):
 
     @staticmethod
     def bind_database(db_filename: str = 'database.db'):
+        """ Bind database to db in file <db_filename> """
         my_dbs.db.bind(provider='sqlite', 
                         filename=db_filename,
                         create_db=True)
@@ -80,9 +81,13 @@ class SQLiteRepository(AbstractRepository[T]):
                 objs_lst.append(self.data_cls(**db_obj.get_data()))
 
             return objs_lst
+
         # return objects accroding to condition
-        db_objs_lst = orm.select(p for p in self.table_cls 
-            if all(getattr(p, attr) == value for (attr, value) in where.items()))
+        attr1, value1 = list(where.items())[0]  # first condition
+        # can not put all conditions inside a query, so use at least one condition
+        db_objs_lst = orm.select(p for p in self.table_cls if getattr(p, attr1) == value1)[:]
+        # apply all conditions
+        db_objs_lst = [p for p in db_objs_lst if all([getattr(p, attr) == value for (attr, value) in where.items()])]
 
         objs_lst = []
         for db_obj in db_objs_lst:
