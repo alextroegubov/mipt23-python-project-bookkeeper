@@ -4,7 +4,7 @@ import itertools
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
-from typing import Any, Callable
+from typing import Any, Callable, List, Dict
 
 class InputExpenseWindow(QtWidgets.QDialog):
     """ Pop-up window for entering information about new expense """
@@ -52,13 +52,16 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
     def get_data(self):
         """ Get formatted data""" 
-        
+
         user_input = {
             'expense_date': self.expense_date.text(),
             'amount': self.amount.text(),
             'category': self.category.text(),
             'comment': self.comment.text()
         }
+
+        user_input = [self.expense_date.text(), self.amount.text(),
+                      self.category.text(), self.comment.text()]
 
         return user_input
 
@@ -107,17 +110,25 @@ class MainTableWidget(QtWidgets.QWidget):
 
     def on_cell_clicked(self, row, column):
         self.last_clicked_cell = (row, column)
-        print(self.last_clicked_cell)
+        #print(self.last_clicked_cell)
 
     def on_cell_changed(self, row, column):
         if self.last_clicked_cell == (row, column):
-            print(f'changed cell {(row, column)}')
+
+            items = [self.table.item(row, i) for i in range(self.table.columnCount())]
+
+            new_row_data = [item.data() for item in items]
+            pk = self.user_data[row][0]
+
+            self.update_callback(pk, new_row_data)
+
             self.last_clicked_cell = (-1, -1)
+
 
     def on_clicked_add_button(self):
         exp_win = InputExpenseWindow(self, on_clicked_save_callback=self.add_callback)
         exp_win.show()
-        print('Add button clicked!')
+        #print('Add button clicked!')
 
 #    def _expense_window_callback(self, input_data):
 #        self.add_callback(input_data)
@@ -135,13 +146,13 @@ class MainTableWidget(QtWidgets.QWidget):
 
         print(f'Delete button clicked!')
 
-    def register_add_callback(self, callback: Callable):
+    def register_add_callback(self, callback: Callable[[list[str, str]], None]):
         self.add_callback = callback
 
-    def register_remove_callback(self, callback: Callable):
+    def register_remove_callback(self, callback: Callable[[list[str]], None]):
         self.remove_callback = callback
 
-    def register_update_callback(self, callback: Callable):
+    def register_update_callback(self, callback: Callable[[str, list[str]], None]):
         self.update_callback = callback
 
     def set_data(self, user_data: list[list[str]], headers: list[str]):

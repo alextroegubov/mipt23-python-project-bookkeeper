@@ -1,50 +1,35 @@
 import sys
 
-from PySide6.QtCore import QSize, Qt
-from PySide6.QtWidgets import QApplication, QMainWindow, QPushButton
-from PySide6.QtGui import QScreen
+from PySide6 import QtWidgets, QtGui, QtCore
 
-# Subclass QMainWindow to customize your application's main window
-class MainWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
+class MainWindow(QtWidgets.QMainWindow):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-        self.setWindowTitle("The best Application")
+        self.setWindowTitle("Bookkeeper Application")
+        self.adjust_window_to_screen()
 
-        self.SizeIt()
 
-        self.button = QPushButton("Press Me!")
-        self.button.clicked.connect(self.the_button_was_clicked)
+        self.grid = QtWidgets.QGridLayout()
 
-        self.setCentralWidget(self.button)
+        self.widget = QtWidgets.QWidget()
+        self.widget.setLayout(self.grid)
+        self.setCentralWidget(self.widget)
 
-    def the_button_was_clicked(self):
-        self.button.setText("You already clicked me.")
-        self.button.setEnabled(False)
+    def set_expense_widget(self, widget: QtWidgets.QTableWidget):
+        self.grid.addWidget(widget, 0, 1)
 
-        # Also change the window title.
-        self.setWindowTitle("My Oneshot App")
+    def set_category_widget(self, widget):
+        self.grid.addWidget(widget, 0, 2)
 
-    def SizeIt(self):
+    def set_budget_widget(self, widget):
+        self.grid.addWidget(widget, 0, 0)
+
+    def adjust_window_to_screen(self):
         w = self.screen().geometry().width()
         h = self.screen().geometry().height()
 
-        self.resize(QSize(0.7*w, 0.7*h))
+        self.resize(QtCore.QSize(0.7*w, 0.7*h))
         self.setGeometry(0.15*w, 0.15*h, 0.7*w, 0.7*h)
-        self.setMinimumSize(QSize(0.2*w, 0.2*h))
-        self.setMaximumSize(QSize(0.9*w, 0.9*h))
-
-app = QApplication(sys.argv)
-
-window = MainWindow()
-window.SizeIt()
-window.show()
-
-app.exec()
-
-
-screen = window.screen() # QtGui.QScreen
-print(screen.size()) # разрешение текущего экрана
-print(screen.geometry()) # расположение экрана
-print(screen.name()) # название, напр. 'BenQ BL2480’
-print(screen.physicalSize()) # физ. размер в мм
+        self.setMinimumSize(QtCore.QSize(0.2*w, 0.2*h))
+        self.setMaximumSize(QtCore.QSize(0.9*w, 0.9*h))
