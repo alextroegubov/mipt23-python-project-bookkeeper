@@ -1,12 +1,16 @@
-from PySide6 import QtWidgets, QtGui, QtCore
-from typing import Any, Callable
+"""GUI for categories"""
+
+from PySide6 import QtWidgets
+from typing import Callable
 
 class EditCategoriesWindow(QtWidgets.QDialog):
-    """ Window for editting categories"""
-    def __init__(self, parent, data: list[list[str]],
+    """ Window for editing categories"""
+    def __init__(self, *args, 
+                 data: list[list[str]],
                  add_callback: Callable[[str], None],
-                 del_callback: Callable[[str], None]):
-        super().__init__(parent)
+                 del_callback: Callable[[str], None],
+                 **kwargs):
+        super().__init__(*args, **kwargs)
         self.setWindowTitle("Редактирование списка категорий")
         self.add_callback = add_callback
         self.del_callback = del_callback
@@ -59,8 +63,10 @@ class EditCategoriesWindow(QtWidgets.QDialog):
 
     def on_clicked_add_button(self):
         """ Triggers when add button is pressed"""
+        #TODO check duplicates: through callback return value ?!
         if self.add_input.text():
             self.add_callback(self.add_input.text())
+            self.add_input.clear()
 
     def on_clicked_del_button(self):
         """ Triggers when delete button is pressed"""
@@ -70,6 +76,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
 
 
 class MainCategoryWidget(QtWidgets.QWidget):
+    """ Main widget for displaying  categories"""
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
@@ -89,7 +96,6 @@ class MainCategoryWidget(QtWidgets.QWidget):
         """
         self.user_data = data
         if not (self.w is None):
-
             self.w.set_data(data)
 
     def register_add_callback(self, callback: Callable[[str], None]):
@@ -101,6 +107,7 @@ class MainCategoryWidget(QtWidgets.QWidget):
         self.del_callback = callback
 
     def on_clicked_edit_button(self):
+        """ Open edit window on clicked edit button"""
         self.w = EditCategoriesWindow(self,
             data=self.user_data,
             add_callback=self.add_callback,

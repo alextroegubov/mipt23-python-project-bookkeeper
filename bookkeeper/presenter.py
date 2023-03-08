@@ -1,24 +1,26 @@
 import sys
 import datetime
 import itertools
+from typing import Callable
+
 
 from bookkeeper.pyqt6_view import PyQtView
 from bookkeeper.repository.abstract_repository import AbstractRepository
-from typing import Callable
+from bookkeeper.repository.sqlite_repository import SQLiteRepository
+from bookkeeper.models.category import Category
 
 from PySide6.QtWidgets import QApplication
 
 class Bookkeeper():
-    def __init__(self, view: PyQtView, repository: AbstractRepository):
+    def __init__(self, view: PyQtView, repo_cls: AbstractRepository):
         self.view = PyQtView()
-        self.repository = AbstractRepository
 
-        self.ctgs = [
-            ['1', 'cat1'],
-            ['2', 'cat2'],
-            ['3', 'cat3'],
-            ['4', 'cat4']
-        ]
+        SQLiteRepository.bind_database('database.db')
+        self.cat_repo = repo_cls[Category](Category, Category.__name__)
+
+        self.view.register_category_add_callback(self.category_add_callback)
+        self.view.register_category_del_callback(self.category_del_callback)
+        self.set_category_data()
 
         self.expenses = [
             ['1', '1500', 'abc'],
@@ -26,13 +28,7 @@ class Bookkeeper():
             ['3', '150', 'cde'],
             ['4', '1200', 'gh']
         ]
-
         self.headers = ['sum', 'comment']
-
-        self.ctg_counter = 4
-        self.view.register_category_add_callback(self.category_add_callback)
-        self.view.register_category_del_callback(self.category_del_callback)
-        self.view.set_category_data(self.ctgs)
 
 
         self.exp_counter = 4
@@ -72,18 +68,25 @@ class Bookkeeper():
         self.expenses = new_data
         self.view.set_expense_data(self.expenses, self.headers)
 
-    def category_add_callback(self, cat):
-        self.ctg_counter += 1
-        self.ctgs.append([f'{self.ctg_counter}', f'{cat}'])
-        self.view.category_view.set_data(self.ctgs)
+    def set_category_data(self):
+        ctgs_lst: list[Category] = self.cat_repo.get_all()
+        ctg_data = [[f'{ctg.pk}', f'{ctg.name}'] for ctg in ctgs_lst]
+        self.view.set_category_data(ctg_data)
 
-    def category_del_callback(self, pk):
-        pks = [row[0] for row in self.ctgs]
-        self.ctgs.remove(self.ctgs[pks.index(pk)])
-        self.view.category_view.set_data(self.ctgs)
+    def category_add_callback(self, ctg_name: str):
+        """ Triggers on adding a category """
+        ctg = Category(name=ctg_name, parent = None)
+        self.cat_repo.add(ctg)
+
+        self.set_category_data()
+
+    def category_del_callback(self, pk_str: str):
+        """ Triggers on deleting a category """
+        self.cat_repo.delete(int(pk_str))
+        self.set_category_data()
 
 app = QApplication(sys.argv)
 
-bookkeeper = Bookkeeper(None, None)
+bookkeeper = Bookkeeper(None, SQLiteRepository)
 
 app.exec()
