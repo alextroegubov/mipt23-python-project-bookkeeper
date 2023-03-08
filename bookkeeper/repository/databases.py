@@ -40,7 +40,7 @@ class Expense(db.Entity):  # type: ignore
             'category': self.category,
             'comment': self.comment,
             'added_date': datetime.strptime(self.added_date, "%Y-%m-%d %H:%M:%S.%f"),
-            'expense_date': datetime.strptime(self.expense_date, "%Y-%m-%d %H:%M:%S.%f")
+            'expense_date': datetime.strptime(self.expense_date, "%d-%m-%Y")
         }
 
 
@@ -48,7 +48,7 @@ class Category(db.Entity):  # type: ignore
     """ Database table """
     pk = pny.PrimaryKey(int, auto=True)
     parent = pny.Optional(int)
-    name = pny.Required(str, 20)
+    name = pny.Required(str, 30)
 
     def get_data(self) -> dict[str, Any]:
         """ Get data from entity """

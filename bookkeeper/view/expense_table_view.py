@@ -27,8 +27,10 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
     def create_widgets(self):
         """ Create widgets and add them to layout"""
-        self.expense_date = QtWidgets.QLineEdit()
-        self.expense_date.setPlaceholderText('Дата покупки')
+        self.expense_date = QtWidgets.QDateEdit()
+        self.expense_date.setDisplayFormat('dd-MM-yyyy')
+        self.expense_date.setMinimumDate(QtCore.QDate.fromString('01-01-2022', 'dd-MM-yyyy'))
+        self.expense_date.setMaximumDate(QtCore.QDate.fromString('01-01-2100', 'dd-MM-yyyy'))
         #todo validator
         self.layout.addWidget(self.expense_date)
 
@@ -49,22 +51,17 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
     def is_mandatory_filled(self):
         """ Check if mandatory fields are filled"""
-        return self.amount.text() and self.category.text()
+        return self.amount.text() and self.category.currentText()
 
-    def get_data(self):
+    def get_data(self) -> dict[str, str]:
         """ Get formatted data""" 
-
-        user_input = {
-            'expense_date': self.expense_date.text(),
+        return {
+            'expense_date': self.expense_date.date().toString('dd-MM-yyyy'),
             'amount': self.amount.text(),
-            'category': self.category.text(),
+            'category': self.category.currentText(),
             'comment': self.comment.text()
         }
 
-        user_input = [self.expense_date.text(), self.amount.text(),
-                      self.category.text(), self.comment.text()]
-
-        return user_input
 
     def on_clicked_save_btn(self):
         """ Reaction on clicked save button """
@@ -113,7 +110,7 @@ class MainTableWidget(QtWidgets.QWidget):
         self.last_clicked_cell = (row, column)
         #print(self.last_clicked_cell)
 
-    def on_cell_changed(self, row, column):
+    def on_cell_changed(self, row: int, column: int):
         if self.last_clicked_cell == (row, column):
 
             items = [self.table.item(row, i) for i in range(self.table.columnCount())]
@@ -125,31 +122,23 @@ class MainTableWidget(QtWidgets.QWidget):
 
             self.last_clicked_cell = (-1, -1)
 
-
     def on_clicked_add_button(self):
-        exp_win = InputExpenseWindow(self, 
+        exp_win = InputExpenseWindow(
+            self, 
             on_clicked_save_callback=self.add_callback,
             ctg_options=self.cat_data)
         exp_win.show()
-        #print('Add button clicked!')
-
-#    def _expense_window_callback(self, input_data):
-#        self.add_callback(input_data)
 
     def on_clicked_del_button(self):
         idx = self.table.selectedItems()
-
         if len(idx) == 0:
             return
 
         rows = set([i.row() for i in idx])
         pks = [self.user_data[row][0] for row in rows]
-
         self.remove_callback(pks)
 
-        print(f'Delete button clicked!')
-
-    def register_add_callback(self, callback: Callable[[list[str, str]], None]):
+    def register_add_callback(self, callback: Callable[[dict[str, str]], None]):
         self.add_callback = callback
 
     def register_remove_callback(self, callback: Callable[[list[str]], None]):
@@ -170,7 +159,7 @@ class MainTableWidget(QtWidgets.QWidget):
         """
         self.user_data = user_data
         self.table.setRowCount(len(self.user_data))
-        self.table.setColumnCount(len(self.user_data[0]) - 1)
+        self.table.setColumnCount(len(headers))
         self.table.setHorizontalHeaderLabels(headers)
 
         self._update_visual_content()

@@ -21,34 +21,57 @@ class Bookkeeper():
 
         self.view.register_category_add_callback(self.category_add_callback)
         self.view.register_category_del_callback(self.category_del_callback)
+        self.add_default_categories()
         self.set_category_data()
 
-        self.expenses = [
-            ['1', '1500', 'abc'],
-            ['2', '1900', 'mnk'],
-            ['3', '150', 'cde'],
-            ['4', '1200', 'gh']
-        ]
-        self.headers = ['sum', 'comment']
-
-
-        self.exp_counter = 4
         self.exp_repo = repo_cls[Expense](Expense, Expense.__name__)
         self.view.register_expense_add_callback(self.expense_add_callback)
-        self.view.register_expense_del_callback(self.expense_remove_callback)
+        self.view.register_expense_del_callback(self.expense_del_callback)
         self.view.register_expense_update_callback(self.expense_update_callback)
-        #self.set_expense_data()
-        self.view.set_expense_data(self.expenses, self.headers)
+        self.set_expense_data()
+        #self.view.set_expense_data(self.expenses, self.headers)
 
         self.view.window.show()
 
-    def expense_add_callback(self, data: list[str]):
-        new_row = []
-        new_row.append(f'{self.exp_counter}')
-        new_row.extend(data)
+    def add_default_categories(self):
+        lst = [
+            'Готовая еда',
+            'Овощи, фрукты, ягоды',
+            'Молочные продукты',
+            'Сладости и десерты',
+            'Мясо, птица',
+            'Хлеб и выпечка',
+            'Рыба, морепродукты',
+            'Сыры',
+            'Замороженные продукты',
+            'Напитки',
+            'Кафе и рестораны',
+            'Бытовая химия',
+            'Аптека, врачи',
+            'Путешествия'
+        ]
 
-        self.expenses.append(new_row[:3])
-        self.view.set_expense_data(self.expenses, self.headers)
+        if len(self.cat_repo.get_all()) == 0:
+            for ctg in lst:
+                self.category_add_callback(ctg)
+
+    def set_expense_data(self):
+        exp_lst: list[Expense] = self.exp_repo.get_all()
+        exp_data = [
+            [f'{exp.pk}', f'{exp.expense_date}', f'{exp.amount}', 
+             f'{self.cat_repo.get(exp.category).name}',
+             f'{exp.comment}'] 
+        for exp in exp_lst]
+
+        headers = 'Дата Сумма Категория Комментарий'.split(' ')
+        self.view.set_expense_data(exp_data, headers)
+
+
+    def expense_add_callback(self, data: dict[str, str]):
+        data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
+        new_exp = Expense(**data)
+        self.exp_repo.add(new_exp)
+        self.set_expense_data()
 
     def expense_update_callback(self, pk: str, data: list[str]):
 
@@ -61,15 +84,10 @@ class Bookkeeper():
                 self.view.set_expense_data(self.expenses, self.headers)
                 break
     
-    def expense_remove_callback(self, remove_pk: list[str]):
-        new_data = []
-        for row in self.expenses:
-            if row[0] in remove_pk:
-                continue
-            else:
-                new_data.append(row)
-        self.expenses = new_data
-        self.view.set_expense_data(self.expenses, self.headers)
+    def expense_del_callback(self, del_pk: list[str]):
+        for pk in del_pk:
+            self.exp_repo.delete(int(pk))
+        self.set_expense_data()
 
     def set_category_data(self):
         ctgs_lst: list[Category] = self.cat_repo.get_all()
