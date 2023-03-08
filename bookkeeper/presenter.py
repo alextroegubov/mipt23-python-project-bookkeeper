@@ -8,6 +8,7 @@ from bookkeeper.pyqt6_view import PyQtView
 from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.models.category import Category
+from bookkeeper.models.expense import Expense
 
 from PySide6.QtWidgets import QApplication
 
@@ -32,9 +33,11 @@ class Bookkeeper():
 
 
         self.exp_counter = 4
+        self.exp_repo = repo_cls[Expense](Expense, Expense.__name__)
         self.view.register_expense_add_callback(self.expense_add_callback)
         self.view.register_expense_del_callback(self.expense_remove_callback)
         self.view.register_expense_update_callback(self.expense_update_callback)
+        #self.set_expense_data()
         self.view.set_expense_data(self.expenses, self.headers)
 
         self.view.window.show()

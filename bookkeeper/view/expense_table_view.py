@@ -7,9 +7,12 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from typing import Any, Callable, List, Dict
 
 class InputExpenseWindow(QtWidgets.QDialog):
-    """ Pop-up window for entering information about new expense """
-    def __init__(self, parent, on_clicked_save_callback: Callable):
+    """ Window for entering information about new expense """
+    def __init__(self, parent, on_clicked_save_callback: Callable, ctg_options: list[str]):
         super().__init__(parent)
+
+        self.on_clicked_save_callback = on_clicked_save_callback
+        self.ctg_options = ctg_options
 
         self.setWindowTitle("Добавление записи о раходах")
 
@@ -21,8 +24,6 @@ class InputExpenseWindow(QtWidgets.QDialog):
         self.layout.addWidget(self.save_btn)
 
         self.setLayout(self.layout)
-
-        self.on_clicked_save_callback = on_clicked_save_callback
 
     def create_widgets(self):
         """ Create widgets and add them to layout"""
@@ -36,9 +37,9 @@ class InputExpenseWindow(QtWidgets.QDialog):
         self.amount.setValidator(QtGui.QDoubleValidator(0, 1000000, 2))
         self.layout.addWidget(self.amount)
 
-        self.category = QtWidgets.QLineEdit()
+        self.category = QtWidgets.QComboBox()
         self.category.setPlaceholderText('Категория')
-        # todo validator
+        self.category.addItems(self.ctg_options)
         self.layout.addWidget(self.category)
 
         self.comment = QtWidgets.QLineEdit()
@@ -126,7 +127,9 @@ class MainTableWidget(QtWidgets.QWidget):
 
 
     def on_clicked_add_button(self):
-        exp_win = InputExpenseWindow(self, on_clicked_save_callback=self.add_callback)
+        exp_win = InputExpenseWindow(self, 
+            on_clicked_save_callback=self.add_callback,
+            ctg_options=self.cat_data)
         exp_win.show()
         #print('Add button clicked!')
 
@@ -154,6 +157,9 @@ class MainTableWidget(QtWidgets.QWidget):
 
     def register_update_callback(self, callback: Callable[[str, list[str]], None]):
         self.update_callback = callback
+
+    def set_categories(self, cat_data: list[str]):
+        self.cat_data = cat_data
 
     def set_data(self, user_data: list[list[str]], headers: list[str]):
         """

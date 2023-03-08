@@ -28,6 +28,7 @@ class PyQtView():
 
     def set_category_data(self, data: list[list[str]]):
         self.category_view.set_data(data)
+        self.expense_view.set_categories([row[1] for row in data])
 
     def register_category_add_callback(self, callback: Callable[[str], None]):
         self.category_view.register_add_callback(callback)
