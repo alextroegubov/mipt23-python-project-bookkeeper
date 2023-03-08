@@ -17,14 +17,14 @@ class Bookkeeper():
         self.view = PyQtView()
 
         SQLiteRepository.bind_database('database.db')
-        self.cat_repo = repo_cls[Category](Category, Category.__name__)
+        self.cat_repo = repo_cls(Category, Category.__name__)
 
         self.view.register_category_add_callback(self.category_add_callback)
         self.view.register_category_del_callback(self.category_del_callback)
         self.add_default_categories()
         self.set_category_data()
 
-        self.exp_repo = repo_cls[Expense](Expense, Expense.__name__)
+        self.exp_repo = repo_cls(Expense, Expense.__name__)
         self.view.register_expense_add_callback(self.expense_add_callback)
         self.view.register_expense_del_callback(self.expense_del_callback)
         self.view.register_expense_update_callback(self.expense_update_callback)
@@ -74,15 +74,7 @@ class Bookkeeper():
         self.set_expense_data()
 
     def expense_update_callback(self, pk: str, data: list[str]):
-
-        for row in self.expenses:
-            if row[0] == pk:
-                new_row = []
-                new_row.append(pk)
-                new_row.extend(data)
-                self.expenses.append(new_row[:3])
-                self.view.set_expense_data(self.expenses, self.headers)
-                break
+        pass
     
     def expense_del_callback(self, del_pk: list[str]):
         for pk in del_pk:

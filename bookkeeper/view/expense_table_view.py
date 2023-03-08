@@ -16,14 +16,14 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
         self.setWindowTitle("Добавление записи о раходах")
 
-        self.layout = QtWidgets.QVBoxLayout()
+        self.my_layout = QtWidgets.QVBoxLayout()
         self.create_widgets()
 
         self.save_btn = QtWidgets.QPushButton('Сохранить новую запись')
-        self.save_btn.clicked.connect(self.on_clicked_save_btn)
-        self.layout.addWidget(self.save_btn)
+        self.save_btn.clicked.connect(self.on_clicked_save_btn)  # type: ignore[attr-defined]
+        self.my_layout.addWidget(self.save_btn)
 
-        self.setLayout(self.layout)
+        self.setLayout(self.my_layout)
 
     def create_widgets(self):
         """ Create widgets and add them to layout"""
@@ -32,29 +32,29 @@ class InputExpenseWindow(QtWidgets.QDialog):
         self.expense_date.setMinimumDate(QtCore.QDate.fromString('01-01-2022', 'dd-MM-yyyy'))
         self.expense_date.setMaximumDate(QtCore.QDate.fromString('01-01-2100', 'dd-MM-yyyy'))
         #todo validator
-        self.layout.addWidget(self.expense_date)
+        self.my_layout.addWidget(self.expense_date)
 
         self.amount = QtWidgets.QLineEdit()
         self.amount.setPlaceholderText('Сумма')
         self.amount.setValidator(QtGui.QDoubleValidator(0, 1000000, 2))
-        self.layout.addWidget(self.amount)
+        self.my_layout.addWidget(self.amount)
 
         self.category = QtWidgets.QComboBox()
         self.category.setPlaceholderText('Категория')
         self.category.addItems(self.ctg_options)
-        self.layout.addWidget(self.category)
+        self.my_layout.addWidget(self.category)
 
         self.comment = QtWidgets.QLineEdit()
         self.comment.setPlaceholderText('Комментарий')
         # todo validator
-        self.layout.addWidget(self.comment)
+        self.my_layout.addWidget(self.comment)
 
     def is_mandatory_filled(self):
         """ Check if mandatory fields are filled"""
         return self.amount.text() and self.category.currentText()
 
     def get_data(self) -> dict[str, str]:
-        """ Get formatted data""" 
+        """ Get formatted data"""
         return {
             'expense_date': self.expense_date.date().toString('dd-MM-yyyy'),
             'amount': self.amount.text(),
@@ -85,9 +85,9 @@ class MainTableWidget(QtWidgets.QWidget):
         self.table = QtWidgets.QTableWidget()
 
         add_btn = QtWidgets.QPushButton('Add')
-        add_btn.clicked.connect(self.on_clicked_add_button)
+        add_btn.clicked.connect(self.on_clicked_add_button)  # type: ignore[attr-defined]
         del_btn = QtWidgets.QPushButton('Delete')
-        del_btn.clicked.connect(self.on_clicked_del_button)
+        del_btn.clicked.connect(self.on_clicked_del_button)  # type: ignore[attr-defined]
 
         # horizontal layout with buttons
         h_layout = QtWidgets.QHBoxLayout()

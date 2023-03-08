@@ -23,7 +23,7 @@ class DatabaseHelper():
         raise Exception
 
 
-class Expense(db.Entity):  # type: ignore
+class Expense(db.Entity):
     """ Database table """
     pk = pny.PrimaryKey(int, auto=True)
     amount = pny.Required(float)
@@ -44,7 +44,7 @@ class Expense(db.Entity):  # type: ignore
         }
 
 
-class Category(db.Entity):  # type: ignore
+class Category(db.Entity):
     """ Database table """
     pk = pny.PrimaryKey(int, auto=True)
     parent = pny.Optional(int)
