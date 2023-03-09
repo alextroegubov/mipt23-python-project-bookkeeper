@@ -107,20 +107,24 @@ class MainTableWidget(QtWidgets.QWidget):
         self.setLayout(v_layout)
 
     def on_cell_clicked(self, row, column):
-        self.last_clicked_cell = (row, column)
-        #print(self.last_clicked_cell)
+        pass
+        # TODO
+        # self.last_clicked_cell = (row, column)
+        # #print(self.last_clicked_cell)
 
     def on_cell_changed(self, row: int, column: int):
-        if self.last_clicked_cell == (row, column):
+        pass
+        #TODO
+        # if self.last_clicked_cell == (row, column):
 
-            items = [self.table.item(row, i) for i in range(self.table.columnCount())]
+        #     items = [self.table.item(row, i) for i in range(self.table.columnCount())]
 
-            new_row_data = [item.data() for item in items]
-            pk = self.user_data[row][0]
+        #     new_row_data = [item.data() for item in items]
+        #     pk = self.user_data[row][0]
 
-            self.update_callback(pk, new_row_data)
+        #     self.update_callback(pk, new_row_data)
 
-            self.last_clicked_cell = (-1, -1)
+        #     self.last_clicked_cell = (-1, -1)
 
     def on_clicked_add_button(self):
         exp_win = InputExpenseWindow(

@@ -1,5 +1,6 @@
 import sys
-import datetime
+from datetime import date, datetime
+import calendar
 import itertools
 from typing import Callable
 
@@ -19,34 +20,84 @@ class Bookkeeper():
 
         SQLiteRepository.bind_database('database.db')
         self.cat_repo = repo_cls(Category, Category.__name__)
+        self.exp_repo = repo_cls(Expense, Expense.__name__)
+        self.budget_repo = repo_cls(Budget, Budget.__name__)
 
         self.view.register_category_add_callback(self.category_add_callback)
         self.view.register_category_del_callback(self.category_del_callback)
         self.add_default_categories()
         self.set_category_data()
 
-        self.exp_repo = repo_cls(Expense, Expense.__name__)
         self.view.register_expense_add_callback(self.expense_add_callback)
         self.view.register_expense_del_callback(self.expense_del_callback)
         self.view.register_expense_update_callback(self.expense_update_callback)
         self.set_expense_data()
 
-        self.budget_repo = repo_cls(Budget, Budget.__name__)
-        self.budget = [
-            ['1', 'Day', '1500', '2000'],
-            ['2', 'Week', '1500', '2000'],
-            ['3', 'Month', '1500', '10000']
-        ]
-
         self.view.register_budget_update_callback(self.budget_update_callback)
-        self.view.set_budget_data(self.budget, 'Период Потрачено Лимит'.split(' '))
+        self.add_default_budget()
+        self.set_budget_data()
+
+
+        #self.view.set_budget_data(self.budget, 'Период Потрачено Лимит'.split(' '))
+        #         self.budget = [
+        #     ['1', 'Day', '1500', '2000'],
+        #     ['2', 'Week', '1500', '2000'],
+        #     ['3', 'Month', '1500', '10000']
+        # ]
+
         self.view.window.show()
 
 
+    def set_budget_data(self):
+        self.update_budget_spent_column()
+        budget_lst: list[Budget] = self.budget_repo.get_all()
+        budget_data = [
+            [f'{b.pk}', f'{b.period}', f'{b.spent}', f'{b.limit}']
+            for b in budget_lst
+        ]
+        headers = 'Период Потрачено Лимит'.split(' ')
+        self.view.set_budget_data(budget_data, headers=headers)
+
+    def update_budget_spent_column(self):
+        #TODO do not take all records
+        all_expenses: list[Expense] = self.exp_repo.get_all()
+        day = date.today().day
+        month = date.today().month
+        year = date.today().year
+
+        spent_day = 0
+        spent_month = 0
+        spent_year = 0
+
+        for expense in all_expenses:
+
+            if expense.expense_date == datetime(year=year, month=month, day=day):
+                spent_day += expense.amount
+
+            if datetime(year=year, month=month, day=1) <= expense.expense_date <= datetime(year=year, month=month, day=calendar.monthrange(year, month)[1]):
+                spent_month += expense.amount
+            #TODO: change to year
+            if datetime(year=year, month=1, day=1) <= expense.expense_date <= datetime(year=year, month=12, day=calendar.monthrange(year, 12)[1]):
+                spent_year += expense.amount
+
+        for spent_period, period in zip([spent_day, spent_month, spent_year], ['День', 'Месяц', 'Год']):
+            period_record: Budget = self.budget_repo.get_all(where={'period': period})[0]
+            if period_record.spent != spent_period:
+                period_record.spent = spent_period
+                self.budget_repo.update(period_record)
 
     def budget_update_callback(self, pk_str, new_limit_str):
-        self.budget[int(pk_str) - 1][3] = new_limit_str
-        self.view.set_budget_data(self.budget, 'Период Потрачено Лимит'.split(' '))
+        record: Budget = self.budget_repo.get(int(pk_str))
+        record.limit = float(new_limit_str)
+        self.budget_repo.update(record)
+
+        self.set_budget_data()
+
+    def add_default_budget(self):
+        if len(self.budget_repo.get_all()) == 0:
+            for period in 'День Месяц Год'.split(' '):
+                budget = Budget(period=period, limit=0, spent=0)
+                self.budget_repo.add(budget)
 
     def add_default_categories(self):
         lst = [
@@ -73,13 +124,16 @@ class Bookkeeper():
     def set_expense_data(self):
         exp_lst: list[Expense] = self.exp_repo.get_all()
         exp_data = [
-            [f'{exp.pk}', f'{exp.expense_date}', f'{exp.amount}', 
+            [f'{exp.pk}', f'{exp.expense_date.strftime("%d-%m-%y")}', f'{exp.amount}', 
              f'{self.cat_repo.get(exp.category).name}',
-             f'{exp.comment}'] 
+             f'{exp.comment}']
         for exp in exp_lst]
+
+        exp_data = sorted(exp_data, key=lambda row: row[1], reverse=True)
 
         headers = 'Дата Сумма Категория Комментарий'.split(' ')
         self.view.set_expense_data(exp_data, headers)
+        self.set_budget_data()
 
     def expense_add_callback(self, data: dict[str, str]):
         data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
