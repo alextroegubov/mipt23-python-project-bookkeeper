@@ -9,6 +9,7 @@ from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
+from bookkeeper.models.budget import Budget
 
 from PySide6.QtWidgets import QApplication
 
@@ -29,9 +30,23 @@ class Bookkeeper():
         self.view.register_expense_del_callback(self.expense_del_callback)
         self.view.register_expense_update_callback(self.expense_update_callback)
         self.set_expense_data()
-        #self.view.set_expense_data(self.expenses, self.headers)
 
+        self.budget_repo = repo_cls(Budget, Budget.__name__)
+        self.budget = [
+            ['1', 'Day', '1500', '2000'],
+            ['2', 'Week', '1500', '2000'],
+            ['3', 'Month', '1500', '10000']
+        ]
+
+        self.view.register_budget_update_callback(self.budget_update_callback)
+        self.view.set_budget_data(self.budget, 'Период Потрачено Лимит'.split(' '))
         self.view.window.show()
+
+
+
+    def budget_update_callback(self, pk_str, new_limit_str):
+        self.budget[int(pk_str) - 1][3] = new_limit_str
+        self.view.set_budget_data(self.budget, 'Период Потрачено Лимит'.split(' '))
 
     def add_default_categories(self):
         lst = [
@@ -65,7 +80,6 @@ class Bookkeeper():
 
         headers = 'Дата Сумма Категория Комментарий'.split(' ')
         self.view.set_expense_data(exp_data, headers)
-
 
     def expense_add_callback(self, data: dict[str, str]):
         data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
