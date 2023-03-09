@@ -17,13 +17,13 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setCentralWidget(self.widget)
 
     def set_expense_widget(self, widget: QtWidgets.QTableWidget):
-        self.grid.addWidget(widget, 0, 1)
+        self.grid.addWidget(widget, 0, 0)
 
     def set_category_widget(self, widget):
-        self.grid.addWidget(widget, 0, 2)
+        self.grid.addWidget(widget, 1, 1)
 
     def set_budget_widget(self, widget):
-        self.grid.addWidget(widget, 0, 0)
+        self.grid.addWidget(widget, 0, 1)
 
     def adjust_window_to_screen(self):
         w = self.screen().geometry().width()

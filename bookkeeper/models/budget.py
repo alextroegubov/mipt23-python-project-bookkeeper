@@ -10,11 +10,9 @@ class Budget:
     """
     Budget.
     period -- period for budget
-    category -- specify category
     budget -- money limit
-
     """
     period: str
-    category: int
-    budget: int
+    limit: float = 0
+    spent: float = 0
     pk: int = 0

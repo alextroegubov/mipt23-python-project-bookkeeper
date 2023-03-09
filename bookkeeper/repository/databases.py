@@ -20,11 +20,13 @@ class DatabaseHelper():
             return Expense
         if name == 'Category':
             return Category
+        if name == 'Budget':
+            return Budget
         raise Exception
 
 
-class Expense(db.Entity):  # type: ignore
-    """ Database table """
+class Expense(db.Entity):
+    """ ORM for database table Expense"""
     pk = pny.PrimaryKey(int, auto=True)
     amount = pny.Required(float)
     category = pny.Required(int)
@@ -44,8 +46,8 @@ class Expense(db.Entity):  # type: ignore
         }
 
 
-class Category(db.Entity):  # type: ignore
-    """ Database table """
+class Category(db.Entity):
+    """ ORM for database table Category"""
     pk = pny.PrimaryKey(int, auto=True)
     parent = pny.Optional(int)
     name = pny.Required(str, 30)
@@ -56,4 +58,20 @@ class Category(db.Entity):  # type: ignore
             'pk': self.pk,
             'parent': None if self.parent == NONE_2_INT_CHANGER else self.parent,
             'name': self.name
+        }
+
+class Budget(db.Entity):
+    """ ORM for database table Budget"""
+    pk = pny.PrimaryKey(int, auto=True)
+    period = pny.Required(str, 20)
+    limit = pny.Required(float)
+    spent = pny.Required(float)
+
+    def get_data(self) -> dict[str, Any]:
+        """Get data from entity """
+        return {
+            'pk': self.pk,
+            'period': self.period,
+            'limit': self.limit,
+            'spent': self.spent
         }

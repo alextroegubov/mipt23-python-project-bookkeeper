@@ -1,11 +1,10 @@
 """GUI for categories"""
-
-from PySide6 import QtWidgets
 from typing import Callable
+from PySide6 import QtWidgets
 
 class EditCategoriesWindow(QtWidgets.QDialog):
     """ Window for editing categories"""
-    def __init__(self, *args, 
+    def __init__(self, *args,
                  data: list[list[str]],
                  add_callback: Callable[[str], None],
                  del_callback: Callable[[str], None],
@@ -16,7 +15,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         self.del_callback = del_callback
 
         self.user_data: list[list[str]]
-        self.ctg_lst: list[str]
+        self.ctgs_lst: list[str]
 
         main_layout = QtWidgets.QVBoxLayout()
         message = QtWidgets.QLabel("Категории")
@@ -27,19 +26,20 @@ class EditCategoriesWindow(QtWidgets.QDialog):
 
         grid_layout = QtWidgets.QGridLayout()
 
-        self.add_btn = QtWidgets.QPushButton('Добавить категорию')
-        self.add_btn.clicked.connect(self.on_clicked_add_button)
-        grid_layout.addWidget(self.add_btn, 0, 1)
+        add_btn = QtWidgets.QPushButton('Добавить категорию')
+        add_btn.clicked.connect(self.on_clicked_add_button)  # type: ignore[attr-defined]
+        grid_layout.addWidget(add_btn, 0, 1)
 
         self.add_input = QtWidgets.QLineEdit()
         self.add_input.setPlaceholderText('Новая категория')
         grid_layout.addWidget(self.add_input, 0, 0)
 
-        self.del_btn = QtWidgets.QPushButton('Удалить категорию')
-        self.del_btn.clicked.connect(self.on_clicked_del_button)
-        grid_layout.addWidget(self.del_btn, 1, 1)
+        del_btn = QtWidgets.QPushButton('Удалить категорию')
+        del_btn.clicked.connect(self.on_clicked_del_button)  # type: ignore[attr-defined]
+        grid_layout.addWidget(del_btn, 1, 1)
 
         self.del_input = QtWidgets.QComboBox()
+        self.del_input.setPlaceholderText('Выберите категорию')
         grid_layout.addWidget(self.del_input, 1, 0)
 
         main_layout.addLayout(grid_layout)
@@ -71,8 +71,9 @@ class EditCategoriesWindow(QtWidgets.QDialog):
     def on_clicked_del_button(self):
         """ Triggers when delete button is pressed"""
         combo_box_input = self.del_input.currentText()
-        pk = self.user_data[self.ctgs_lst.index(combo_box_input)][0]
-        self.del_callback(pk)
+        if combo_box_input:
+            pk = self.user_data[self.ctgs_lst.index(combo_box_input)][0]
+            self.del_callback(pk)
 
 
 class MainCategoryWidget(QtWidgets.QWidget):
@@ -83,11 +84,14 @@ class MainCategoryWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         btn = QtWidgets.QPushButton('Редактировать список категорий')
-        btn.clicked.connect(self.on_clicked_edit_button)
+        btn.clicked.connect(self.on_clicked_edit_button)  # type: ignore[attr-defined]
         layout.addWidget(btn)
         self.setLayout(layout)
 
-        self.w: EditCategoriesWindow = None
+        self.edit_window: EditCategoriesWindow = None
+        self.add_callback: Callable[[str], None]
+        self.del_callback: Callable[[str], None]
+        self.user_data: list[list[str]]
 
     def set_data(self, data: list[list[str]]):
         """ Data format: [['pk1', 'cat1'], ['pk2', 'cat2']].
@@ -95,8 +99,8 @@ class MainCategoryWidget(QtWidgets.QWidget):
             used in callbacks
         """
         self.user_data = data
-        if not (self.w is None):
-            self.w.set_data(data)
+        if not self.edit_window is None:
+            self.edit_window.set_data(data)
 
     def register_add_callback(self, callback: Callable[[str], None]):
         """ Register callback on adding a new category"""
@@ -108,9 +112,8 @@ class MainCategoryWidget(QtWidgets.QWidget):
 
     def on_clicked_edit_button(self):
         """ Open edit window on clicked edit button"""
-        self.w = EditCategoriesWindow(self,
+        self.edit_window = EditCategoriesWindow(self,
             data=self.user_data,
             add_callback=self.add_callback,
             del_callback=self.del_callback)
-        self.w.show()
-
+        self.edit_window.show()
