@@ -1,18 +1,17 @@
 """GUI for categories"""
 from typing import Callable
-from PySide6 import QtWidgets
+from PySide6 import QtWidgets, QtCore
 
 
 class EditCategoriesWindow(QtWidgets.QDialog):
     """ Window for editing categories"""
-
     def __init__(self,
                  parent: QtWidgets.QWidget | None,
                  data: list[list[str]],
                  add_callback: Callable[[str], None],
                  del_callback: Callable[[str], None]):
         super().__init__(parent=parent)
-        self.setWindowTitle("Редактирование списка категорий")
+        self.setWindowTitle("Мои категории")
         self.add_callback = add_callback
         self.del_callback = del_callback
 
@@ -20,11 +19,14 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         self.ctgs_lst: list[str]
 
         main_layout = QtWidgets.QVBoxLayout()
-        message = QtWidgets.QLabel("Категории")
-        main_layout.addWidget(message)
+        label = QtWidgets.QLabel("Список категорий")
+        main_layout.addWidget(label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.ctg_lst_widget = QtWidgets.QListWidget()
-        main_layout.addWidget(self.ctg_lst_widget)
+        main_layout.addWidget(self.ctg_lst_widget, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+
+        label = QtWidgets.QLabel("Редактировать")
+        main_layout.addWidget(label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
         grid_layout = QtWidgets.QGridLayout()
 
@@ -109,7 +111,7 @@ class MainCategoryWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout()
 
-        btn = QtWidgets.QPushButton('Редактировать список категорий')
+        btn = QtWidgets.QPushButton('Мои категории')
         btn.clicked.connect(self.on_clicked_edit_button)  # type: ignore[attr-defined]
         layout.addWidget(btn)
         self.setLayout(layout)
