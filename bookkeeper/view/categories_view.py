@@ -65,15 +65,36 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         """ Triggers when add button is pressed"""
         #TODO check duplicates: through callback return value ?!
         if self.add_input.text():
-            self.add_callback(self.add_input.text())
-            self.add_input.clear()
+
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Question,
+                text=f"Добавить категорию {self.add_input.text()}?"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
+            answer = dlg.exec()
+
+            if answer == QtWidgets.QMessageBox.Yes:
+                self.add_callback(self.add_input.text())
+                self.add_input.clear()
 
     def on_clicked_del_button(self):
         """ Triggers when delete button is pressed"""
         combo_box_input = self.del_input.currentText()
+
         if combo_box_input:
-            pk = self.user_data[self.ctgs_lst.index(combo_box_input)][0]
-            self.del_callback(pk)
+
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Question,
+                text=f"Удалить категорию {combo_box_input}?"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
+            answer = dlg.exec()
+
+            if answer == QtWidgets.QMessageBox.Yes:
+                pk = self.user_data[self.ctgs_lst.index(combo_box_input)][0]
+                self.del_callback(pk)
 
 
 class MainCategoryWidget(QtWidgets.QWidget):
