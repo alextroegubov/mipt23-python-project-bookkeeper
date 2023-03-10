@@ -2,14 +2,16 @@
 from typing import Callable
 from PySide6 import QtWidgets
 
+
 class EditCategoriesWindow(QtWidgets.QDialog):
     """ Window for editing categories"""
-    def __init__(self, *args,
+
+    def __init__(self,
+                 parent: QtWidgets.QWidget | None,
                  data: list[list[str]],
                  add_callback: Callable[[str], None],
-                 del_callback: Callable[[str], None],
-                 **kwargs):
-        super().__init__(*args, **kwargs)
+                 del_callback: Callable[[str], None]):
+        super().__init__(parent=parent)
         self.setWindowTitle("Редактирование списка категорий")
         self.add_callback = add_callback
         self.del_callback = del_callback
@@ -47,7 +49,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
 
         self.set_data(data)
 
-    def set_data(self, data: list[list[str]]):
+    def set_data(self, data: list[list[str]]) -> None:
         """ Data format: [['pk1', 'cat1'], ['pk2', 'cat2']].
             The first element is considered as a primary key and 
             used in callbacks
@@ -61,25 +63,49 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         self.del_input.clear()
         self.del_input.addItems(self.ctgs_lst)
 
-    def on_clicked_add_button(self):
+    def on_clicked_add_button(self) -> None:
         """ Triggers when add button is pressed"""
-        #TODO check duplicates: through callback return value ?!
+        # TODO check duplicates: through callback return value ?!
         if self.add_input.text():
-            self.add_callback(self.add_input.text())
-            self.add_input.clear()
 
-    def on_clicked_del_button(self):
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Question,
+                text=f"Добавить категорию {self.add_input.text()}?"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
+                                   QtWidgets.QMessageBox.Cancel)
+            answer = dlg.exec()
+
+            if answer == QtWidgets.QMessageBox.Yes:
+                self.add_callback(self.add_input.text())
+                self.add_input.clear()
+
+    def on_clicked_del_button(self) -> None:
         """ Triggers when delete button is pressed"""
         combo_box_input = self.del_input.currentText()
+
         if combo_box_input:
-            pk = self.user_data[self.ctgs_lst.index(combo_box_input)][0]
-            self.del_callback(pk)
+
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Question,
+                text=f"Удалить категорию {combo_box_input}?"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
+                                   QtWidgets.QMessageBox.Cancel)
+            answer = dlg.exec()
+
+            if answer == QtWidgets.QMessageBox.Yes:
+                pk = self.user_data[self.ctgs_lst.index(combo_box_input)][0]
+                self.del_callback(pk)
 
 
 class MainCategoryWidget(QtWidgets.QWidget):
     """ Main widget for displaying  categories"""
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+
+    def __init__(self, parent: QtWidgets.QWidget | None = None):
+        super().__init__(parent=parent)
 
         layout = QtWidgets.QVBoxLayout()
 
@@ -88,12 +114,12 @@ class MainCategoryWidget(QtWidgets.QWidget):
         layout.addWidget(btn)
         self.setLayout(layout)
 
-        self.edit_window: EditCategoriesWindow = None
+        self.edit_window: EditCategoriesWindow | None = None
         self.add_callback: Callable[[str], None]
         self.del_callback: Callable[[str], None]
         self.user_data: list[list[str]]
 
-    def set_data(self, data: list[list[str]]):
+    def set_data(self, data: list[list[str]]) -> None:
         """ Data format: [['pk1', 'cat1'], ['pk2', 'cat2']].
             The first element is considered as a primary key and 
             used in callbacks
@@ -102,18 +128,18 @@ class MainCategoryWidget(QtWidgets.QWidget):
         if not self.edit_window is None:
             self.edit_window.set_data(data)
 
-    def register_add_callback(self, callback: Callable[[str], None]):
+    def register_add_callback(self, callback: Callable[[str], None]) -> None:
         """ Register callback on adding a new category"""
         self.add_callback = callback
 
-    def register_del_callback(self, callback: Callable[[str], None]):
+    def register_del_callback(self, callback: Callable[[str], None]) -> None:
         """ Register callback on deleting a category"""
         self.del_callback = callback
 
-    def on_clicked_edit_button(self):
+    def on_clicked_edit_button(self) -> None:
         """ Open edit window on clicked edit button"""
         self.edit_window = EditCategoriesWindow(self,
-            data=self.user_data,
-            add_callback=self.add_callback,
-            del_callback=self.del_callback)
+                                                data=self.user_data,
+                                                add_callback=self.add_callback,
+                                                del_callback=self.del_callback)
         self.edit_window.show()

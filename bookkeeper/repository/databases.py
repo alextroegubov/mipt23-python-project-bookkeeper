@@ -5,7 +5,7 @@ from typing import Any
 from datetime import datetime
 
 import pony.orm as pny  # type: ignore
-from utils import NONE_2_INT_CHANGER  # type: ignore
+from bookkeeper.utils import NONE_2_INT_CHANGER  # type: ignore
 
 
 db = pny.Database()
@@ -14,7 +14,7 @@ db = pny.Database()
 class DatabaseHelper():
     """ Contains static methods to work with sqlite3 database """
     @staticmethod
-    def get_table_by_name(name: str) -> db.Entity:
+    def get_table_by_name(name: str) -> db.Entity | None:
         """ Get database class entity by table name"""
         if name == 'Expense':
             return Expense
@@ -22,7 +22,7 @@ class DatabaseHelper():
             return Category
         if name == 'Budget':
             return Budget
-        raise Exception
+        return None
 
 
 class Expense(db.Entity):
@@ -59,6 +59,7 @@ class Category(db.Entity):
             'parent': None if self.parent == NONE_2_INT_CHANGER else self.parent,
             'name': self.name
         }
+
 
 class Budget(db.Entity):
     """ ORM for database table Budget"""
