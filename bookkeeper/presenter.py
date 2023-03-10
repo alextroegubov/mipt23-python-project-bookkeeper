@@ -43,11 +43,11 @@ class Bookkeeper():
         self.update_budget_spent_column()
         budget_lst: list[Budget] = self.budget_repo.get_all()
         budget_data = [
-            [f'{b.pk}', f'{b.period}', f'{b.spent}', f'{b.limit}']
+            [f'{b.pk}', f'{b.period}', f'{b.spent}', f'{b.limit}', f'{b.limit-b.spent}']
             for b in budget_lst
         ]
-        headers = 'Период Потрачено Лимит'.split(' ')
-        self.view.set_budget_data(budget_data, headers=headers)
+
+        self.view.set_budget_data(budget_data)
 
     def update_budget_spent_column(self) -> None:
         """ Updates budget spent column based on expenses"""

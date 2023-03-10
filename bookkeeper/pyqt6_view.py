@@ -17,23 +17,21 @@ class PyQtView():
         self.category_view = MainCategoryWidget()
         self.budget_view = BudgetWidget()
 
-        self.window.set_expense_widget(self.expense_view)
-        self.window.set_category_widget(self.category_view)
-        self.window.set_budget_widget(self.budget_view)
+        self.window.set_widgets(self.expense_view, self.category_view, self.budget_view)
 
-    def set_budget_data(self, user_data: list[list[str]], headers: list[str]) -> None:
+    def set_budget_data(self, user_data: list[list[str]]) -> None:
         """Set user data to be displayed. The first element in each row is considered 
         as a primary and is not displayed. Primary key is used in callbacks."""
-        self.budget_view.set_data(user_data, headers)
+        self.budget_view.set_data(user_data)
 
     def register_budget_update_callback(self, callback: Callable[[str, str], None]) -> None:
         """ Register budget update callback"""
         self.budget_view.register_update_callback(callback)
 
-    def set_expense_data(self, user_data: list[list[str]], headers: list[str]) -> None:
+    def set_expense_data(self, user_data: list[list[str]]) -> None:
         """Set user data to be displayed. The first element in each row is considered 
         as a primary and is not displayed. Primary key is used in callbacks."""
-        self.expense_view.set_data(user_data, headers)
+        self.expense_view.set_data(user_data)
 
     def set_category_data(self, data: list[list[str]]) -> None:
         """ Data format: [['pk1', 'cat1'], ['pk2', 'cat2']]. The first element 

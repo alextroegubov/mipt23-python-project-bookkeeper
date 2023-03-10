@@ -65,7 +65,7 @@ class InputExpenseWindow(QtWidgets.QDialog):
             QtCore.QDate.fromString('01-01-2100', 'dd-MM-yyyy'))
         self.my_layout.addWidget(self.expense_date)
 
-        label = QtWidgets.QLabel('Сумма покупки')
+        label = QtWidgets.QLabel('Сумма покупки (руб.)')
         self.my_layout.addWidget(label)
         self.amount = QtWidgets.QLineEdit()
         self.amount.setPlaceholderText('500')
@@ -141,8 +141,11 @@ class MainTableWidget(QtWidgets.QWidget):
 
         # buttons under the table
         v_layout = QtWidgets.QVBoxLayout()
-        v_layout.addWidget(QtWidgets.QLabel("Последние расходы"))
+        v_layout.addWidget(QtWidgets.QLabel("Мои последние расходы"),
+                           alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         v_layout.addWidget(self.table)
+        v_layout.addWidget(QtWidgets.QLabel("Управление записями"), 
+                           alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         v_layout.addLayout(h_layout)
 
         self.setLayout(v_layout)
@@ -265,7 +268,7 @@ class MainTableWidget(QtWidgets.QWidget):
             self.table.setItem(row, col, item)
 
     def set_up_table(self):
-        my_headers = 'Дата Сумма Категория Комментарий'.split(' ')
+        my_headers = ['Дата покупки', 'Сумма, руб.', 'Категория', 'Комментарий']
         self.table.setColumnCount(len(my_headers))
         self.table.setHorizontalHeaderLabels(my_headers)
 

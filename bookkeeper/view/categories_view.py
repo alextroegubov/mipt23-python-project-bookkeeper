@@ -23,7 +23,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         main_layout.addWidget(label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.ctg_lst_widget = QtWidgets.QListWidget()
-        main_layout.addWidget(self.ctg_lst_widget, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
+        main_layout.addWidget(self.ctg_lst_widget)
 
         label = QtWidgets.QLabel("Редактировать")
         main_layout.addWidget(label, alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
