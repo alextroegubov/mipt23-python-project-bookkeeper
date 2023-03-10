@@ -124,12 +124,15 @@ class Bookkeeper():
     def set_expense_data(self):
         exp_lst: list[Expense] = self.exp_repo.get_all()
         exp_data = [
-            [f'{exp.pk}', f'{exp.expense_date.strftime("%d-%m-%y")}', f'{exp.amount}', 
+            [f'{exp.pk}', exp.expense_date, f'{exp.amount}', 
              f'{self.cat_repo.get(exp.category).name}',
              f'{exp.comment}']
         for exp in exp_lst]
 
         exp_data = sorted(exp_data, key=lambda row: row[1], reverse=True)
+
+        for exp in exp_data:
+            exp[1] = f'{exp[1].strftime("%d-%m-%Y")}'
 
         headers = 'Дата Сумма Категория Комментарий'.split(' ')
         self.view.set_expense_data(exp_data, headers)
@@ -142,8 +145,11 @@ class Bookkeeper():
         self.set_expense_data()
 
     def expense_update_callback(self, pk: str, data: list[str]):
-        pass
-    
+        data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
+        upd_exp = Expense(pk=int(pk), **data)
+        self.exp_repo.update(upd_exp)
+        self.set_expense_data()
+
     def expense_del_callback(self, del_pk: list[str]):
         for pk in del_pk:
             self.exp_repo.delete(int(pk))

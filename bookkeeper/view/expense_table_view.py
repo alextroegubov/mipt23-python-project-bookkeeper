@@ -1,29 +1,54 @@
 import sys
 import datetime
 import itertools
+from functools import partial
 
 from PySide6 import QtWidgets, QtGui, QtCore
-
-from typing import Any, Callable, List, Dict
+from typing import Any, Callable
 
 class InputExpenseWindow(QtWidgets.QDialog):
     """ Window for entering information about new expense """
-    def __init__(self, parent, on_clicked_save_callback: Callable, ctg_options: list[str]):
+    def __init__(
+        self, 
+        parent: QtWidgets.QWidget | None, 
+        on_clicked_save_callback: Callable, 
+        ctg_options: list[str],
+        msg_dict: dict[str, str],
+        default_values: dict[str, str] | None = None
+    ):
         super().__init__(parent)
+
+        self.msg_dict = msg_dict
+        self.setWindowTitle(msg_dict['window_title'])
 
         self.on_clicked_save_callback = on_clicked_save_callback
         self.ctg_options = ctg_options
 
-        self.setWindowTitle("Добавление записи о раходах")
-
         self.my_layout = QtWidgets.QVBoxLayout()
+        self.expense_date: QtWidgets.QDateEdit
+        self.amount: QtWidgets.QLineEdit
+        self.category: QtWidgets.QComboBox
+        self.comment: QtWidgets.QLineEdit
+
         self.create_widgets()
 
-        self.save_btn = QtWidgets.QPushButton('Сохранить новую запись')
-        self.save_btn.clicked.connect(self.on_clicked_save_btn)  # type: ignore[attr-defined]
-        self.my_layout.addWidget(self.save_btn)
+        if not default_values is None:
+            self.fill_in_default_data(default_values)
+
+        save_btn = QtWidgets.QPushButton(msg_dict['save_button_text'])
+        save_btn.clicked.connect(self.on_clicked_save_btn)  # type: ignore[attr-defined]
+        self.my_layout.addWidget(save_btn)
 
         self.setLayout(self.my_layout)
+
+    def fill_in_default_data(self, data: dict[str, str]):
+        self.expense_date.setDate(
+            QtCore.QDate.fromString(f"{data['expense_date']}", 'dd-MM-yyyy')
+        )
+        self.expense_date.show()
+        self.amount.setText(f"{float(data['amount']):.2f}")
+        self.category.setCurrentText(f"{data['category']}")
+        self.comment.setText(f"{data['comment']}")
 
     def create_widgets(self):
         """ Create widgets and add them to layout"""
@@ -84,25 +109,29 @@ class MainTableWidget(QtWidgets.QWidget):
 
         self.table = QtWidgets.QTableWidget()
 
-        add_btn = QtWidgets.QPushButton('Add')
+        add_btn = QtWidgets.QPushButton("Добавить")
         add_btn.clicked.connect(self.on_clicked_add_button)  # type: ignore[attr-defined]
-        del_btn = QtWidgets.QPushButton('Delete')
+        del_btn = QtWidgets.QPushButton("Удалить")
         del_btn.clicked.connect(self.on_clicked_del_button)  # type: ignore[attr-defined]
+        upd_btn = QtWidgets.QPushButton("Редактировать")
+        upd_btn.clicked.connect(self.on_clicked_upd_button)  # type: ignore[attr-defined]
 
         # horizontal layout with buttons
         h_layout = QtWidgets.QHBoxLayout()
         h_layout.addWidget(add_btn)
         h_layout.addWidget(del_btn)
+        h_layout.addWidget(upd_btn)
 
         # buttons under the table
         v_layout = QtWidgets.QVBoxLayout()
+        v_layout.addWidget(QtWidgets.QLabel("Последние расходы"))
         v_layout.addWidget(self.table)
         v_layout.addLayout(h_layout)
 
-        self.table.cellChanged.connect(self.on_cell_changed)
+        #self.table.cellChanged.connect(self.on_cell_changed)
 
-        self.last_clicked_cell: tuple(int, int) = (-1, -1)
-        self.table.cellClicked.connect(self.on_cell_clicked)
+        #self.last_clicked_cell: tuple(int, int) = (-1, -1)
+        #self.table.cellClicked.connect(self.on_cell_clicked)
 
         self.setLayout(v_layout)
 
@@ -126,19 +155,57 @@ class MainTableWidget(QtWidgets.QWidget):
 
         #     self.last_clicked_cell = (-1, -1)
 
+    def on_clicked_upd_button(self):
+        idx = self.table.selectedItems()
+        rows = list(set([i.row() for i in idx]))
+
+        msg_dict = {
+            'window_title': 'Редактировать запись',
+            'save_button_text': 'Сохранить изменения'
+        }
+
+        if len(rows) == 0:
+        # TODO open window
+            pass
+        elif len(rows) == 1:
+            row = rows[0]
+            pk = self.user_data[row][0]
+            row_data = {
+                'expense_date': self.user_data[row][1], 'amount': self.user_data[row][2],
+                'category': self.user_data[row][3], 'comment': self.user_data[row][4]
+            }
+            InputExpenseWindow(
+                self,
+                on_clicked_save_callback=partial(self.update_callback, pk),
+                ctg_options=self.cat_data,
+                msg_dict=msg_dict,
+                default_values=row_data
+            ).show()
+        else:
+            # TODO open window: can update only 1 record at once
+            pass
+
     def on_clicked_add_button(self):
-        exp_win = InputExpenseWindow(
+
+        msg_dict = {
+            'window_title': 'Добавление новой записи',
+            'save_button_text': 'Добавить'
+        }
+        InputExpenseWindow(
             self, 
             on_clicked_save_callback=self.add_callback,
-            ctg_options=self.cat_data)
-        exp_win.show()
+            ctg_options=self.cat_data,
+            msg_dict=msg_dict
+        ).show()
 
     def on_clicked_del_button(self):
         idx = self.table.selectedItems()
         if len(idx) == 0:
+            #TODO open dialog window
             return
 
         rows = set([i.row() for i in idx])
+        #TODO open dialog window "Are you sure to delete?"
         pks = [self.user_data[row][0] for row in rows]
         self.remove_callback(pks)
 
