@@ -1,22 +1,23 @@
+""" Presenter module. Interacts with models, repositories and views."""
 import sys
 from datetime import date, datetime
 import calendar
-import itertools
-from typing import Callable
+from typing import Any
 
+from PySide6.QtWidgets import QApplication
 
 from bookkeeper.pyqt6_view import PyQtView
-from bookkeeper.repository.abstract_repository import AbstractRepository
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 from bookkeeper.models.budget import Budget
 
-from PySide6.QtWidgets import QApplication
+
+
 
 class Bookkeeper():
-    def __init__(self, view: PyQtView, repo_cls: AbstractRepository):
-        self.view = PyQtView()
+    def __init__(self, view_cls: Any, repo_cls: Any):
+        self.view: PyQtView = view_cls()
 
         SQLiteRepository.bind_database('database.db')
         self.cat_repo = repo_cls(Category, Category.__name__)
@@ -39,8 +40,8 @@ class Bookkeeper():
 
         self.view.window.show()
 
-
-    def set_budget_data(self):
+    def set_budget_data(self) -> None:
+        """ Take data from repository and pass it to view"""
         self.update_budget_spent_column()
         budget_lst: list[Budget] = self.budget_repo.get_all()
         budget_data = [
@@ -50,8 +51,9 @@ class Bookkeeper():
         headers = 'Период Потрачено Лимит'.split(' ')
         self.view.set_budget_data(budget_data, headers=headers)
 
-    def update_budget_spent_column(self):
-        #TODO do not take all records
+    def update_budget_spent_column(self) -> None:
+        """ Updates budget spent column based on expenses"""
+        # TODO do not take all records
         all_expenses: list[Expense] = self.exp_repo.get_all()
         day = date.today().day
         month = date.today().month
@@ -66,32 +68,37 @@ class Bookkeeper():
             if expense.expense_date == datetime(year=year, month=month, day=day):
                 spent_day += expense.amount
 
-            if datetime(year=year, month=month, day=1) <= expense.expense_date <= datetime(year=year, month=month, day=calendar.monthrange(year, month)[1]):
+            if (datetime(year=year, month=month, day=1) <= expense.expense_date
+                    <= datetime(year=year, month=month, day=calendar.monthrange(year, month)[1])):
                 spent_month += expense.amount
-            #TODO: change to year
-            if datetime(year=year, month=1, day=1) <= expense.expense_date <= datetime(year=year, month=12, day=calendar.monthrange(year, 12)[1]):
+            # TODO: change to week
+            if (datetime(year=year, month=1, day=1) <= expense.expense_date
+                    <= datetime(year=year, month=12, day=calendar.monthrange(year, 12)[1])):
                 spent_year += expense.amount
 
-        for spent_period, period in zip([spent_day, spent_month, spent_year], ['День', 'Месяц', 'Год']):
-            period_record: Budget = self.budget_repo.get_all(where={'period': period})[0]
-            if period_record.spent != spent_period:
-                period_record.spent = spent_period
+        for spent_prd, prd in zip([spent_day, spent_month, spent_year], ['День', 'Месяц', 'Год']):
+            period_record: Budget = self.budget_repo.get_all(where={'period': prd})[0]
+            if period_record.spent != spent_prd:
+                period_record.spent = spent_prd
                 self.budget_repo.update(period_record)
 
-    def budget_update_callback(self, pk_str, new_limit_str):
+    def budget_update_callback(self, pk_str: str, new_limit_str: str) -> None:
+        """ Callback for budget update"""
         record: Budget = self.budget_repo.get(int(pk_str))
         record.limit = float(new_limit_str)
         self.budget_repo.update(record)
 
         self.set_budget_data()
 
-    def add_default_budget(self):
+    def add_default_budget(self) -> None:
+        """ Add default records in repository if it is empty"""
         if len(self.budget_repo.get_all()) == 0:
             for period in 'День Месяц Год'.split(' '):
                 budget = Budget(period=period, limit=0, spent=0)
                 self.budget_repo.add(budget)
 
-    def add_default_categories(self):
+    def add_default_categories(self) -> None:
+        """ Add default records in repository if it is empty"""
         lst = [
             'Готовая еда',
             'Овощи, фрукты, ягоды',
@@ -113,13 +120,14 @@ class Bookkeeper():
             for ctg in lst:
                 self.category_add_callback(ctg)
 
-    def set_expense_data(self):
+    def set_expense_data(self) -> None:
+        """ Take data from repository and pass it to view"""
         exp_lst: list[Expense] = self.exp_repo.get_all()
         exp_data = [
-            [f'{exp.pk}', exp.expense_date, f'{exp.amount}', 
+            [f'{exp.pk}', exp.expense_date, f'{exp.amount}',
              f'{self.cat_repo.get(exp.category).name}',
              f'{exp.comment}']
-        for exp in exp_lst]
+            for exp in exp_lst]
 
         exp_data = sorted(exp_data, key=lambda row: row[1], reverse=True)
 
@@ -130,42 +138,47 @@ class Bookkeeper():
         self.view.set_expense_data(exp_data, headers)
         self.set_budget_data()
 
-    def expense_add_callback(self, data: dict[str, str]):
+    def expense_add_callback(self, data: dict[str, str]) -> None:
+        """ Callback for expense add procedure"""
         data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
         new_exp = Expense(**data)
         self.exp_repo.add(new_exp)
         self.set_expense_data()
 
-    def expense_update_callback(self, pk: str, data: list[str]):
+    def expense_update_callback(self, pk: str, data: list[str]) -> None:
+        """ Callback for expense update procedure"""
         data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
         upd_exp = Expense(pk=int(pk), **data)
         self.exp_repo.update(upd_exp)
         self.set_expense_data()
 
-    def expense_del_callback(self, del_pk: list[str]):
+    def expense_del_callback(self, del_pk: list[str]) -> None:
+        """ Callback for expense delete procedure"""
         for pk in del_pk:
             self.exp_repo.delete(int(pk))
         self.set_expense_data()
 
-    def set_category_data(self):
+    def set_category_data(self) -> None:
+        """ Take data from repository and pass it to view"""
         ctgs_lst: list[Category] = self.cat_repo.get_all()
         ctg_data = [[f'{ctg.pk}', f'{ctg.name}'] for ctg in ctgs_lst]
         self.view.set_category_data(ctg_data)
 
-    def category_add_callback(self, ctg_name: str):
-        """ Triggers on adding a category """
-        ctg = Category(name=ctg_name, parent = None)
+    def category_add_callback(self, ctg_name: str) -> None:
+        """ Callback for category add procedure"""
+        ctg = Category(name=ctg_name, parent=None)
         self.cat_repo.add(ctg)
 
         self.set_category_data()
 
-    def category_del_callback(self, pk_str: str):
-        """ Triggers on deleting a category """
+    def category_del_callback(self, pk_str: str) -> None:
+        """ Callback for category add procedure"""
         self.cat_repo.delete(int(pk_str))
         self.set_category_data()
 
+
 app = QApplication(sys.argv)
 
-bookkeeper = Bookkeeper(None, SQLiteRepository)
+bookkeeper = Bookkeeper(PyQtView, SQLiteRepository)
 
 app.exec()
