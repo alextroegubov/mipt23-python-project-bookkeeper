@@ -75,6 +75,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
                 icon=QtWidgets.QMessageBox.Question,
                 text=f"Добавить категорию {self.add_input.text()}?"
             )
+            dlg.setWindowTitle('Добавление категории')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
                                    QtWidgets.QMessageBox.Cancel)
             answer = dlg.exec()
@@ -94,6 +95,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
                 icon=QtWidgets.QMessageBox.Question,
                 text=f"Удалить категорию {combo_box_input}?"
             )
+            dlg.setWindowTitle('Удаление категории')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
                                    QtWidgets.QMessageBox.Cancel)
             answer = dlg.exec()
@@ -126,7 +128,7 @@ class MainCategoryWidget(QtWidgets.QWidget):
             The first element is considered as a primary key and 
             used in callbacks
         """
-        self.user_data = data
+        self.user_data = sorted(data, key=lambda row: row[1])
         if not self.edit_window is None:
             self.edit_window.set_data(data)
 

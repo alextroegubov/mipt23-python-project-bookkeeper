@@ -1,6 +1,6 @@
 """ Presenter module. Interacts with models, repositories and views."""
 import sys
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import calendar
 from typing import Any
 
@@ -11,8 +11,6 @@ from bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
 from bookkeeper.models.budget import Budget
-
-
 
 
 class Bookkeeper():
@@ -53,30 +51,29 @@ class Bookkeeper():
 
     def update_budget_spent_column(self) -> None:
         """ Updates budget spent column based on expenses"""
-        # TODO do not take all records
         all_expenses: list[Expense] = self.exp_repo.get_all()
+
         day = date.today().day
         month = date.today().month
         year = date.today().year
+        today = datetime(year=year, month=month, day=day)
 
-        spent_day = 0
-        spent_month = 0
-        spent_year = 0
+        spent_day, spent_week, spent_month = 0, 0, 0
 
         for expense in all_expenses:
-
-            if expense.expense_date == datetime(year=year, month=month, day=day):
+            # day
+            if expense.expense_date == today:
                 spent_day += expense.amount
-
+            # month
             if (datetime(year=year, month=month, day=1) <= expense.expense_date
                     <= datetime(year=year, month=month, day=calendar.monthrange(year, month)[1])):
                 spent_month += expense.amount
-            # TODO: change to week
-            if (datetime(year=year, month=1, day=1) <= expense.expense_date
-                    <= datetime(year=year, month=12, day=calendar.monthrange(year, 12)[1])):
-                spent_year += expense.amount
+            # week
+            monday = today - timedelta(days=today.weekday())
+            if (monday <= expense.expense_date <= monday + timedelta(days=6)):
+                spent_week += expense.amount
 
-        for spent_prd, prd in zip([spent_day, spent_month, spent_year], ['День', 'Месяц', 'Год']):
+        for spent_prd, prd in zip([spent_day, spent_week, spent_month], ['День', 'Неделя', 'Месяц']):
             period_record: Budget = self.budget_repo.get_all(where={'period': prd})[0]
             if period_record.spent != spent_prd:
                 period_record.spent = spent_prd
@@ -93,7 +90,7 @@ class Bookkeeper():
     def add_default_budget(self) -> None:
         """ Add default records in repository if it is empty"""
         if len(self.budget_repo.get_all()) == 0:
-            for period in 'День Месяц Год'.split(' '):
+            for period in 'День Неделя Месяц'.split(' '):
                 budget = Budget(period=period, limit=0, spent=0)
                 self.budget_repo.add(budget)
 

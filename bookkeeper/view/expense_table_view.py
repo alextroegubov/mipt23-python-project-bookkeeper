@@ -83,12 +83,11 @@ class InputExpenseWindow(QtWidgets.QDialog):
         self.my_layout.addWidget(label)
         self.comment = QtWidgets.QLineEdit()
         self.comment.setPlaceholderText('Кафе после работы')
-        # todo validator
         self.my_layout.addWidget(self.comment)
 
     def is_mandatory_filled(self) -> bool:
         """ Check if mandatory fields are filled"""
-        return bool(self.amount.text() and self.category.currentText())
+        return True and self.amount.text() and self.category.currentText()
 
     def get_data(self) -> dict[str, str]:
         """ Get formatted data"""
@@ -110,6 +109,7 @@ class InputExpenseWindow(QtWidgets.QDialog):
                 icon=QtWidgets.QMessageBox.Information,
                 text="Заполните поля 'сумма' и 'категория'"
             )
+            dlg.setWindowTitle(' ')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             dlg.exec()
 
@@ -166,6 +166,7 @@ class MainTableWidget(QtWidgets.QWidget):
                 icon=QtWidgets.QMessageBox.Information,
                 text="Выберете запись для редактирования."
             )
+            dlg.setWindowTitle(' ')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             dlg.exec()
 
@@ -189,6 +190,7 @@ class MainTableWidget(QtWidgets.QWidget):
                 icon=QtWidgets.QMessageBox.Information,
                 text="За раз можно отредактировать только одну запись."
             )
+            dlg.setWindowTitle(' ')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             dlg.exec()
 
@@ -213,6 +215,7 @@ class MainTableWidget(QtWidgets.QWidget):
                 icon=QtWidgets.QMessageBox.Information,
                 text="Выберите записи в таблице расходов"
             )
+            dlg.setWindowTitle(' ')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             dlg.exec()
         else:
@@ -221,7 +224,8 @@ class MainTableWidget(QtWidgets.QWidget):
                 icon=QtWidgets.QMessageBox.Question,
                 text="Удалить выбранные записи?"
             )
-            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            dlg.setWindowTitle('Удаление категории')
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
             answer = dlg.exec()
 
             if answer == QtWidgets.QMessageBox.Yes:
