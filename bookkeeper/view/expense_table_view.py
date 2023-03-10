@@ -265,5 +265,10 @@ class MainTableWidget(QtWidgets.QWidget):
         n_cols = self.table.columnCount()
 
         for i, j in itertools.product(range(n_rows), range(n_cols)):
-            self.table.setItem(i, j, QtWidgets.QTableWidgetItem(self.user_data[i][j+1]))
+            item = QtWidgets.QTableWidgetItem(self.user_data[i][j+1])
+            item.setFlags(
+                QtCore.Qt.ItemFlag.ItemIsSelectable | 
+                QtCore.Qt.ItemFlag.ItemIsEnabled)
+
+            self.table.setItem(i, j, item)
 
