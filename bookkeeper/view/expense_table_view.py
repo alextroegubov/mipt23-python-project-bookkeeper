@@ -115,15 +115,17 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
 
 class MainTableWidget(QtWidgets.QWidget):
+    """ Main widget for displaying expense table"""
+    user_data = list[list[str]]
+    update_callback: Callable[[str, list[str]], None]
+    remove_callback: Callable[[list[str]], None]
+    add_callback: Callable[[dict[str, str]], None]
+
     def __init__(self, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent=parent)
 
-        self.user_data = list[list[str]]
-        self.update_callback: Callable[[str, list[str]], None]
-        self.remove_callback: Callable[[list[str]], None]
-        self.add_callback: Callable[[dict[str, str]], None]
-
         self.table = QtWidgets.QTableWidget()
+        self.set_up_table()
 
         add_btn = QtWidgets.QPushButton("Добавить")
         add_btn.clicked.connect(self.on_clicked_add_button)  # type: ignore[attr-defined]
@@ -134,20 +136,14 @@ class MainTableWidget(QtWidgets.QWidget):
 
         # horizontal layout with buttons
         h_layout = QtWidgets.QHBoxLayout()
-        h_layout.addWidget(add_btn)
-        h_layout.addWidget(del_btn)
-        h_layout.addWidget(upd_btn)
+        for btn in [add_btn, del_btn, upd_btn]:
+            h_layout.addWidget(btn)
 
         # buttons under the table
         v_layout = QtWidgets.QVBoxLayout()
         v_layout.addWidget(QtWidgets.QLabel("Последние расходы"))
         v_layout.addWidget(self.table)
         v_layout.addLayout(h_layout)
-
-        # self.table.cellChanged.connect(self.on_cell_changed)
-
-        # self.last_clicked_cell: tuple(int, int) = (-1, -1)
-        # self.table.cellClicked.connect(self.on_cell_clicked)
 
         self.setLayout(v_layout)
 
@@ -225,7 +221,8 @@ class MainTableWidget(QtWidgets.QWidget):
                 text="Удалить выбранные записи?"
             )
             dlg.setWindowTitle('Удаление категории')
-            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.Cancel)
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
+                                   QtWidgets.QMessageBox.Cancel)
             answer = dlg.exec()
 
             if answer == QtWidgets.QMessageBox.Yes:
@@ -245,8 +242,9 @@ class MainTableWidget(QtWidgets.QWidget):
     def set_categories(self, cat_data: list[str]) -> None:
         self.cat_data = cat_data
 
-    def set_data(self, user_data: list[list[str]], headers: list[str]) -> None:
+    def set_data(self, user_data: list[list[str]]) -> None:
         """
+        TODO: data format!
         Set user data to be displayed.
         The first element in each row is considered as a primary 
         and is not displayed. 
@@ -254,19 +252,23 @@ class MainTableWidget(QtWidgets.QWidget):
         """
         self.user_data = user_data
         self.table.setRowCount(len(self.user_data))
-        self.table.setColumnCount(len(headers))
-        self.table.setHorizontalHeaderLabels(headers)
 
-        self._update_visual_content()
-
-    def _update_visual_content(self) -> None:
-        n_rows = self.table.rowCount()
         n_cols = self.table.columnCount()
+        n_rows = self.table.rowCount()
 
-        for i, j in itertools.product(range(n_rows), range(n_cols)):
-            item = QtWidgets.QTableWidgetItem(self.user_data[i][j+1])
+        for row, col in itertools.product(range(n_rows), range(n_cols)):
+            item = QtWidgets.QTableWidgetItem(self.user_data[row][col+1])
             item.setFlags(
                 QtCore.Qt.ItemFlag.ItemIsSelectable |
                 QtCore.Qt.ItemFlag.ItemIsEnabled)
 
-            self.table.setItem(i, j, item)
+            self.table.setItem(row, col, item)
+
+    def set_up_table(self):
+        my_headers = 'Дата Сумма Категория Комментарий'.split(' ')
+        self.table.setColumnCount(len(my_headers))
+        self.table.setHorizontalHeaderLabels(my_headers)
+
+        header = self.table.horizontalHeader()
+        header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
+        header.setSectionResizeMode(len(my_headers)-1, QtWidgets.QHeaderView.ResizeMode.Stretch)

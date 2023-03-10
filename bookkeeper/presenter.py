@@ -131,8 +131,7 @@ class Bookkeeper():
         for exp in exp_data:
             exp[1] = f'{exp[1].strftime("%d-%m-%Y")}'
 
-        headers = 'Дата Сумма Категория Комментарий'.split(' ')
-        self.view.set_expense_data(exp_data, headers)
+        self.view.set_expense_data(exp_data)
         self.set_budget_data()
 
     def expense_add_callback(self, data: dict[str, str]) -> None:
