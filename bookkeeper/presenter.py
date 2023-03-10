@@ -37,14 +37,6 @@ class Bookkeeper():
         self.add_default_budget()
         self.set_budget_data()
 
-
-        #self.view.set_budget_data(self.budget, 'Период Потрачено Лимит'.split(' '))
-        #         self.budget = [
-        #     ['1', 'Day', '1500', '2000'],
-        #     ['2', 'Week', '1500', '2000'],
-        #     ['3', 'Month', '1500', '10000']
-        # ]
-
         self.view.window.show()
 
 

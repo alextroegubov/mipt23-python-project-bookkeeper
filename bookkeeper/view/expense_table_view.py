@@ -52,25 +52,33 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
     def create_widgets(self):
         """ Create widgets and add them to layout"""
+        label = QtWidgets.QLabel('Дата покупки')
+        self.my_layout.addWidget(label)
+
         self.expense_date = QtWidgets.QDateEdit()
         self.expense_date.setDisplayFormat('dd-MM-yyyy')
         self.expense_date.setMinimumDate(QtCore.QDate.fromString('01-01-2022', 'dd-MM-yyyy'))
         self.expense_date.setMaximumDate(QtCore.QDate.fromString('01-01-2100', 'dd-MM-yyyy'))
-        #todo validator
         self.my_layout.addWidget(self.expense_date)
 
+        label = QtWidgets.QLabel('Сумма покупки')
+        self.my_layout.addWidget(label)
         self.amount = QtWidgets.QLineEdit()
-        self.amount.setPlaceholderText('Сумма')
+        self.amount.setPlaceholderText('500')
         self.amount.setValidator(QtGui.QDoubleValidator(0, 1000000, 2))
         self.my_layout.addWidget(self.amount)
 
+        label = QtWidgets.QLabel('Категория покупки')
+        self.my_layout.addWidget(label)
         self.category = QtWidgets.QComboBox()
-        self.category.setPlaceholderText('Категория')
+        self.category.setPlaceholderText('Выбрать')
         self.category.addItems(self.ctg_options)
         self.my_layout.addWidget(self.category)
 
+        label = QtWidgets.QLabel('Комментарий')
+        self.my_layout.addWidget(label)
         self.comment = QtWidgets.QLineEdit()
-        self.comment.setPlaceholderText('Комментарий')
+        self.comment.setPlaceholderText('Кафе после работы')
         # todo validator
         self.my_layout.addWidget(self.comment)
 
@@ -87,15 +95,19 @@ class InputExpenseWindow(QtWidgets.QDialog):
             'comment': self.comment.text()
         }
 
-
     def on_clicked_save_btn(self):
         """ Reaction on clicked save button """
         if self.is_mandatory_filled():
             self.on_clicked_save_callback(self.get_data())
             self.close()
         else:
-            # TODO show msg
-            pass
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Information,
+                text="Заполните поля 'сумма' и 'категория'"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            dlg.exec()
 
 
 class MainTableWidget(QtWidgets.QWidget):
@@ -201,13 +213,26 @@ class MainTableWidget(QtWidgets.QWidget):
     def on_clicked_del_button(self):
         idx = self.table.selectedItems()
         if len(idx) == 0:
-            #TODO open dialog window
-            return
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Information,
+                text="Выберите записи в таблице расходов"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
+            dlg.exec()
+        else:
+            dlg = QtWidgets.QMessageBox(
+                parent=self,
+                icon=QtWidgets.QMessageBox.Question,
+                text="Удалить выбранные записи?"
+            )
+            dlg.setStandardButtons(QtWidgets.QMessageBox.Yes | QtWidgets.QMessageBox.No)
+            answer = dlg.exec()
 
-        rows = set([i.row() for i in idx])
-        #TODO open dialog window "Are you sure to delete?"
-        pks = [self.user_data[row][0] for row in rows]
-        self.remove_callback(pks)
+            if answer == QtWidgets.QMessageBox.Yes:
+                rows = set([i.row() for i in idx])
+                pks = [self.user_data[row][0] for row in rows]
+                self.remove_callback(pks)
 
     def register_add_callback(self, callback: Callable[[dict[str, str]], None]):
         self.add_callback = callback
