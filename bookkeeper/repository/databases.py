@@ -41,8 +41,8 @@ class Expense(db.Entity):
             'amount': self.amount,
             'category': self.category,
             'comment': self.comment,
-            'added_date': datetime.strptime(self.added_date, "%Y-%m-%d %H:%M:%S.%f"),
-            'expense_date': datetime.strptime(self.expense_date, "%d-%m-%Y")
+            'added_date': self.added_date,#datetime.strptime(self.added_date, "%d-%m-%Y %H:%M"),
+            'expense_date': self.expense_date#datetime.strptime(self.expense_date, "%d-%m-%Y")
         }
 
 

@@ -62,15 +62,15 @@ class Bookkeeper():
 
         for expense in all_expenses:
             # day
-            if expense.expense_date == today:
+            if datetime.strptime(expense.expense_date, "%d-%m-%Y") == today:
                 spent_day += expense.amount
             # month
-            if (datetime(year=year, month=month, day=1) <= expense.expense_date
+            if (datetime(year=year, month=month, day=1) <= datetime.strptime(expense.expense_date, "%d-%m-%Y")
                     <= datetime(year=year, month=month, day=calendar.monthrange(year, month)[1])):
                 spent_month += expense.amount
             # week
             monday = today - timedelta(days=today.weekday())
-            if (monday <= expense.expense_date <= monday + timedelta(days=6)):
+            if (monday <= datetime.strptime(expense.expense_date, "%d-%m-%Y") <= monday + timedelta(days=6)):
                 spent_week += expense.amount
 
         for spent_prd, prd in zip([spent_day, spent_week, spent_month], ['День', 'Неделя', 'Месяц']):
@@ -126,10 +126,11 @@ class Bookkeeper():
              f'{exp.comment}']
             for exp in exp_lst]
 
-        exp_data = sorted(exp_data, key=lambda row: row[1], reverse=True)
+        exp_data = sorted(exp_data, key=lambda row: datetime.strptime(
+            row[1], "%d-%m-%Y"), reverse=True)
 
-        for exp in exp_data:
-            exp[1] = f'{exp[1].strftime("%d-%m-%Y")}'
+#        for exp in exp_data:
+#            exp[1] = f'{exp[1].strftime("%d-%m-%Y")}'
 
         self.view.set_expense_data(exp_data)
         self.set_budget_data()
