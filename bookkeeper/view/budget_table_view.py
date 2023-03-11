@@ -22,18 +22,18 @@ class BudgetWidget(QtWidgets.QWidget):
         main_layout.addWidget(label, alignment=QtCore.Qt.AlignmentFlag.AlignHCenter)
         main_layout.addWidget(self.table)
 
-        self.table.cellChanged.connect(self.on_cell_changed)
+        self.table.cellChanged.connect(self._on_cell_changed)
 
         self.last_clicked_cell: tuple[int, int] = (-1, -1)
-        self.table.cellClicked.connect(self.on_cell_clicked)
+        self.table.cellClicked.connect(self._on_cell_clicked)
 
         self.setLayout(main_layout)
 
-    def on_cell_clicked(self, row: int, column: int) -> None:
+    def _on_cell_clicked(self, row: int, column: int) -> None:
         """ Triggers on cell clicked"""
         self.last_clicked_cell = (row, column)
 
-    def on_cell_changed(self, row: int, column: int) -> None:
+    def _on_cell_changed(self, row: int, column: int) -> None:
         """ Triggers on cell changed"""
         if self.last_clicked_cell == (row, column):
             item = self.table.item(row, column)
@@ -75,11 +75,8 @@ class BudgetWidget(QtWidgets.QWidget):
                     QtCore.Qt.ItemFlag.ItemIsSelectable |
                     QtCore.Qt.ItemFlag.ItemIsEnabled)
             self.table.setItem(row, col, item)
-            
-        #self.table.resizeRowsToContents()
 
-        #self.table.setFixedSize(self.table.sizeHint())
-        #self.table.setSizeAdjustPolicy(QtCore.Qt.  QAbstractScrollArea.AdjustToContents)
+        # self.table.resizeRowsToContents()
 
     def set_up_table(self):
         my_headers = ['Период', 'Расходы за период, руб.', 'Лимит, руб', 'Остаток, руб.']
@@ -88,9 +85,9 @@ class BudgetWidget(QtWidgets.QWidget):
 
         self.table.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
         self.table.verticalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Stretch)
-        #self.table.setSizePolicy(QtWidgets.QSizePolicy.Minimum)
         self.table.setFixedHeight(120)
         self.table.verticalHeader().hide()
+
 
 """
     Qt.NoItemFlags          0   It does not have any properties set.
