@@ -30,17 +30,17 @@ class EditCategoriesWindow(QtWidgets.QDialog):
 
         grid_layout = QtWidgets.QGridLayout()
 
-        add_btn = QtWidgets.QPushButton('Добавить категорию')
-        add_btn.clicked.connect(self.on_clicked_add_button)  # type: ignore[attr-defined]
-        grid_layout.addWidget(add_btn, 0, 1)
+        self.add_btn = QtWidgets.QPushButton('Добавить категорию')
+        self.add_btn.clicked.connect(self._on_clicked_add_button)  # type: ignore[attr-defined]
+        grid_layout.addWidget(self.add_btn, 0, 1)
 
         self.add_input = QtWidgets.QLineEdit()
         self.add_input.setPlaceholderText('Новая категория')
         grid_layout.addWidget(self.add_input, 0, 0)
 
-        del_btn = QtWidgets.QPushButton('Удалить категорию')
-        del_btn.clicked.connect(self.on_clicked_del_button)  # type: ignore[attr-defined]
-        grid_layout.addWidget(del_btn, 1, 1)
+        self.del_btn = QtWidgets.QPushButton('Удалить категорию')
+        self.del_btn.clicked.connect(self._on_clicked_del_button)  # type: ignore[attr-defined]
+        grid_layout.addWidget(self.del_btn, 1, 1)
 
         self.del_input = QtWidgets.QComboBox()
         self.del_input.setPlaceholderText('Выберите категорию')
@@ -65,9 +65,8 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         self.del_input.clear()
         self.del_input.addItems(self.ctgs_lst)
 
-    def on_clicked_add_button(self) -> None:
+    def _on_clicked_add_button(self) -> None:
         """ Triggers when add button is pressed"""
-        # TODO check duplicates: through callback return value ?!
         if self.add_input.text():
 
             dlg = QtWidgets.QMessageBox(
@@ -84,7 +83,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
                 self.add_callback(self.add_input.text())
                 self.add_input.clear()
 
-    def on_clicked_del_button(self) -> None:
+    def _on_clicked_del_button(self) -> None:
         """ Triggers when delete button is pressed"""
         combo_box_input = self.del_input.currentText()
 
@@ -98,6 +97,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
             dlg.setWindowTitle('Удаление категории')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
                                    QtWidgets.QMessageBox.Cancel)
+            
             answer = dlg.exec()
 
             if answer == QtWidgets.QMessageBox.Yes:
@@ -113,9 +113,9 @@ class MainCategoryWidget(QtWidgets.QWidget):
 
         layout = QtWidgets.QVBoxLayout()
 
-        btn = QtWidgets.QPushButton('Мои категории')
-        btn.clicked.connect(self.on_clicked_edit_button)  # type: ignore[attr-defined]
-        layout.addWidget(btn)
+        self.btn = QtWidgets.QPushButton('Мои категории')
+        self.btn.clicked.connect(self._on_clicked_edit_button)  # type: ignore[attr-defined]
+        layout.addWidget(self.btn)
         self.setLayout(layout)
 
         self.edit_window: EditCategoriesWindow | None = None
@@ -140,7 +140,7 @@ class MainCategoryWidget(QtWidgets.QWidget):
         """ Register callback on deleting a category"""
         self.del_callback = callback
 
-    def on_clicked_edit_button(self) -> None:
+    def _on_clicked_edit_button(self) -> None:
         """ Open edit window on clicked edit button"""
         self.edit_window = EditCategoriesWindow(self,
                                                 data=self.user_data,
