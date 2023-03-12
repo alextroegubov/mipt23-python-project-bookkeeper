@@ -6,7 +6,7 @@ from typing import Any
 
 from PySide6.QtWidgets import QApplication
 
-from bookkeeper.pyqt6_view import PyQtView
+from bookkeeper.view.pyqt6_view import PyQtView
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
 from bookkeeper.models.category import Category
 from bookkeeper.models.expense import Expense
@@ -14,13 +14,17 @@ from bookkeeper.models.budget import Budget
 
 
 class Bookkeeper():
-    def __init__(self, view_cls: Any, repo_cls: Any):
-        self.view: PyQtView = view_cls()
+    def __init__(self, view: PyQtView, repo_cls: SQLiteRepository):
+        self.view = view
 
-        SQLiteRepository.bind_database('database.db')
+        repo_cls.bind_database('database.db')
         self.cat_repo = repo_cls(Category, Category.__name__)
         self.exp_repo = repo_cls(Expense, Expense.__name__)
         self.budget_repo = repo_cls(Budget, Budget.__name__)
+
+        self.view.register_budget_update_callback(self.budget_update_callback)
+        self.add_default_budget()
+        self.set_budget_data()
 
         self.view.register_category_add_callback(self.category_add_callback)
         self.view.register_category_del_callback(self.category_del_callback)
@@ -31,10 +35,6 @@ class Bookkeeper():
         self.view.register_expense_del_callback(self.expense_del_callback)
         self.view.register_expense_update_callback(self.expense_update_callback)
         self.set_expense_data()
-
-        self.view.register_budget_update_callback(self.budget_update_callback)
-        self.add_default_budget()
-        self.set_budget_data()
 
         self.view.window.show()
 
@@ -122,6 +122,7 @@ class Bookkeeper():
         exp_lst: list[Expense] = self.exp_repo.get_all()
         exp_data = [
             [f'{exp.pk}', exp.expense_date, f'{exp.amount}',
+             # check it is not none
              f'{self.cat_repo.get(exp.category).name}',
              f'{exp.comment}']
             for exp in exp_lst]
@@ -172,10 +173,3 @@ class Bookkeeper():
         """ Callback for category add procedure"""
         self.cat_repo.delete(int(pk_str))
         self.set_category_data()
-
-
-app = QApplication(sys.argv)
-
-bookkeeper = Bookkeeper(PyQtView, SQLiteRepository)
-
-app.exec()
