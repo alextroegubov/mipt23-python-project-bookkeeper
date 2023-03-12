@@ -1,3 +1,4 @@
+""" Module for main window widgets"""
 from PySide6 import QtWidgets, QtCore
 
 

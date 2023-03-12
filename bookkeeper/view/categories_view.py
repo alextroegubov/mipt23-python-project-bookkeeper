@@ -5,6 +5,7 @@ from PySide6 import QtWidgets, QtCore
 
 class EditCategoriesWindow(QtWidgets.QDialog):
     """ Window for editing categories"""
+
     def __init__(self,
                  parent: QtWidgets.QWidget | None,
                  data: list[list[str]],
@@ -31,7 +32,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         grid_layout = QtWidgets.QGridLayout()
 
         self.add_btn = QtWidgets.QPushButton('Добавить категорию')
-        self.add_btn.clicked.connect(self._on_clicked_add_button)  # type: ignore[attr-defined]
+        self.add_btn.clicked.connect(self._on_clicked_add_button)
         grid_layout.addWidget(self.add_btn, 0, 1)
 
         self.add_input = QtWidgets.QLineEdit()
@@ -39,7 +40,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
         grid_layout.addWidget(self.add_input, 0, 0)
 
         self.del_btn = QtWidgets.QPushButton('Удалить категорию')
-        self.del_btn.clicked.connect(self._on_clicked_del_button)  # type: ignore[attr-defined]
+        self.del_btn.clicked.connect(self._on_clicked_del_button)
         grid_layout.addWidget(self.del_btn, 1, 1)
 
         self.del_input = QtWidgets.QComboBox()
@@ -97,7 +98,7 @@ class EditCategoriesWindow(QtWidgets.QDialog):
             dlg.setWindowTitle('Удаление категории')
             dlg.setStandardButtons(QtWidgets.QMessageBox.Yes |
                                    QtWidgets.QMessageBox.Cancel)
-            
+
             answer = dlg.exec()
 
             if answer == QtWidgets.QMessageBox.Yes:
@@ -114,7 +115,7 @@ class MainCategoryWidget(QtWidgets.QWidget):
         layout = QtWidgets.QVBoxLayout()
 
         self.btn = QtWidgets.QPushButton('Мои категории')
-        self.btn.clicked.connect(self._on_clicked_edit_button)  # type: ignore[attr-defined]
+        self.btn.clicked.connect(self._on_clicked_edit_button)
         layout.addWidget(self.btn)
         self.setLayout(layout)
 

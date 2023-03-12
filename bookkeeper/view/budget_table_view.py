@@ -78,7 +78,7 @@ class BudgetWidget(QtWidgets.QWidget):
 
         # self.table.resizeRowsToContents()
 
-    def set_up_table(self):
+    def set_up_table(self) -> None:
         my_headers = ['Период', 'Расходы за период, руб.', 'Лимит, руб', 'Остаток, руб.']
         self.table.setColumnCount(len(my_headers))
         self.table.setHorizontalHeaderLabels(my_headers)

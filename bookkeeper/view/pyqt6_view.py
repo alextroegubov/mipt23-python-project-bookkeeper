@@ -55,7 +55,7 @@ class PyQtView():
         """ Register expense delete callback"""
         self.expense_view.register_remove_callback(callback)
 
-    def register_expense_update_callback(self, callback: Callable[[str, list[str]], None]) -> None:
+    def register_expense_update_callback(self, callback: Callable[[str, dict[str, str]], None]) -> None:
         """ Register expense update callback"""
         self.expense_view.register_update_callback(callback)
 

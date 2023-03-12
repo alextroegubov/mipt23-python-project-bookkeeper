@@ -14,7 +14,7 @@ db = pny.Database()
 class DatabaseHelper():
     """ Contains static methods to work with sqlite3 database """
     @staticmethod
-    def get_table_by_name(name: str) -> db.Entity | None:
+    def get_table_by_name(name: str) -> db.Entity:
         """ Get database class entity by table name"""
         if name == 'Expense':
             return Expense
@@ -22,7 +22,8 @@ class DatabaseHelper():
             return Category
         if name == 'Budget':
             return Budget
-        return None
+
+        return Expense
 
 
 class Expense(db.Entity):

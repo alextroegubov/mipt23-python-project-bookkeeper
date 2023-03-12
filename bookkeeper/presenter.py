@@ -1,10 +1,6 @@
 """ Presenter module. Interacts with models, repositories and views."""
-import sys
 from datetime import date, datetime, timedelta
 import calendar
-from typing import Any
-
-from PySide6.QtWidgets import QApplication
 
 from bookkeeper.view.pyqt6_view import PyQtView
 from bookkeeper.repository.sqlite_repository import SQLiteRepository
@@ -14,7 +10,7 @@ from bookkeeper.models.budget import Budget
 
 
 class Bookkeeper():
-    def __init__(self, view: PyQtView, repo_cls: SQLiteRepository):
+    def __init__(self, view: PyQtView, repo_cls: type):
         self.view = view
 
         repo_cls.bind_database('database.db')
@@ -58,7 +54,7 @@ class Bookkeeper():
         year = date.today().year
         today = datetime(year=year, month=month, day=day)
 
-        spent_day, spent_week, spent_month = 0, 0, 0
+        spent_day, spent_week, spent_month = 0.0, 0.0, 0.0
 
         for expense in all_expenses:
             # day
@@ -143,7 +139,7 @@ class Bookkeeper():
         self.exp_repo.add(new_exp)
         self.set_expense_data()
 
-    def expense_update_callback(self, pk: str, data: list[str]) -> None:
+    def expense_update_callback(self, pk: str, data: dict[str, str]) -> None:
         """ Callback for expense update procedure"""
         data['category'] = self.cat_repo.get_all(where={'name': data['category']})[0].pk
         upd_exp = Expense(pk=int(pk), **data)

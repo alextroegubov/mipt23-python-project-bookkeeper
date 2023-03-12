@@ -1,10 +1,8 @@
-import sys
-import datetime
 import itertools
 from functools import partial
 
 from PySide6 import QtWidgets, QtGui, QtCore
-from typing import Any, Callable
+from typing import Callable
 
 
 class InputExpenseWindow(QtWidgets.QDialog):
@@ -21,10 +19,9 @@ class InputExpenseWindow(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.msg_dict = msg_dict
-        if (self.msg_dict.get('window_title') is None or 
-            self.msg_dict.get('save_button_text') is None):
+        if (self.msg_dict.get('window_title') is None or
+                self.msg_dict.get('save_button_text') is None):
             raise KeyError('No <window_title> or <save_button_text>')
-
 
         self.setWindowTitle(msg_dict['window_title'])
 
@@ -92,7 +89,7 @@ class InputExpenseWindow(QtWidgets.QDialog):
 
     def _is_mandatory_filled(self) -> bool:
         """ Check if mandatory fields are filled"""
-        return True and self.amount.text() and self.category.currentText()
+        return bool(self.amount.text() and self.category.currentText())
 
     def get_data(self) -> dict[str, str]:
         """ Get formatted data"""
@@ -135,11 +132,11 @@ class MainTableWidget(QtWidgets.QWidget):
         self.input_win = None
 
         self.add_btn = QtWidgets.QPushButton("Добавить")
-        self.add_btn.clicked.connect(self._on_clicked_add_button)  # type: ignore[attr-defined]
+        self.add_btn.clicked.connect(self._on_clicked_add_button)
         self.del_btn = QtWidgets.QPushButton("Удалить")
-        self.del_btn.clicked.connect(self._on_clicked_del_button)  # type: ignore[attr-defined]
+        self.del_btn.clicked.connect(self._on_clicked_del_button)
         self.upd_btn = QtWidgets.QPushButton("Редактировать")
-        self.upd_btn.clicked.connect(self._on_clicked_upd_button)  # type: ignore[attr-defined]
+        self.upd_btn.clicked.connect(self._on_clicked_upd_button)
 
         # horizontal layout with buttons
         h_layout = QtWidgets.QHBoxLayout()
@@ -151,7 +148,7 @@ class MainTableWidget(QtWidgets.QWidget):
         v_layout.addWidget(QtWidgets.QLabel("Мои последние расходы"),
                            alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         v_layout.addWidget(self.table)
-        v_layout.addWidget(QtWidgets.QLabel("Управление записями"), 
+        v_layout.addWidget(QtWidgets.QLabel("Управление записями"),
                            alignment=QtCore.Qt.AlignmentFlag.AlignCenter)
         v_layout.addLayout(h_layout)
 
@@ -177,11 +174,11 @@ class MainTableWidget(QtWidgets.QWidget):
             dlg.exec()
 
         elif len(rows) == 1:
-            row = rows[0]
-            pk = self.user_data[row][0]
+            sel_row = rows[0]
+            pk = self.user_data[sel_row][0]
             row_data = {
-                'expense_date': self.user_data[row][1], 'amount': self.user_data[row][2],
-                'category': self.user_data[row][3], 'comment': self.user_data[row][4]
+                'expense_date': self.user_data[sel_row][1], 'amount': self.user_data[sel_row][2],
+                'category': self.user_data[sel_row][3], 'comment': self.user_data[sel_row][4]
             }
             self.input_win = InputExpenseWindow(
                 self,
@@ -239,7 +236,7 @@ class MainTableWidget(QtWidgets.QWidget):
 
             if answer == QtWidgets.QMessageBox.Yes:
                 rows = set([i.row() for i in idx])
-                pks = [self.user_data[row][0] for row in rows]
+                pks = [self.user_data[i][0] for i in rows]
                 self.remove_callback(pks)
 
     def register_add_callback(self, callback: Callable[[dict[str, str]], None]) -> None:
@@ -256,7 +253,6 @@ class MainTableWidget(QtWidgets.QWidget):
 
     def set_data(self, user_data: list[list[str]]) -> None:
         """
-        TODO: data format!
         Set user data to be displayed.
         The first element in each row is considered as a primary 
         and is not displayed. 
@@ -276,11 +272,12 @@ class MainTableWidget(QtWidgets.QWidget):
 
             self.table.setItem(row, col, item)
 
-    def set_up_table(self):
+    def set_up_table(self) -> None:
         my_headers = ['Дата покупки', 'Сумма, руб.', 'Категория', 'Комментарий']
         self.table.setColumnCount(len(my_headers))
         self.table.setHorizontalHeaderLabels(my_headers)
 
         header = self.table.horizontalHeader()
         header.setSectionResizeMode(QtWidgets.QHeaderView.ResizeMode.ResizeToContents)
-        header.setSectionResizeMode(len(my_headers)-1, QtWidgets.QHeaderView.ResizeMode.Stretch)
+        header.setSectionResizeMode(
+            len(my_headers)-1, QtWidgets.QHeaderView.ResizeMode.Stretch)
