@@ -21,6 +21,11 @@ class InputExpenseWindow(QtWidgets.QDialog):
         super().__init__(parent)
 
         self.msg_dict = msg_dict
+        if (self.msg_dict.get('window_title') is None or 
+            self.msg_dict.get('save_button_text') is None):
+            raise KeyError('No <window_title> or <save_button_text>')
+
+
         self.setWindowTitle(msg_dict['window_title'])
 
         self.on_clicked_save_callback = on_clicked_save_callback
@@ -37,9 +42,9 @@ class InputExpenseWindow(QtWidgets.QDialog):
         if not default_values is None:
             self.fill_in_default_data(default_values)
 
-        save_btn = QtWidgets.QPushButton(msg_dict['save_button_text'])
-        save_btn.clicked.connect(self.on_clicked_save_btn)  # type: ignore[attr-defined]
-        self.my_layout.addWidget(save_btn)
+        self.save_btn = QtWidgets.QPushButton(msg_dict['save_button_text'])
+        self.save_btn.clicked.connect(self._on_clicked_save_btn)
+        self.my_layout.addWidget(self.save_btn)
 
         self.setLayout(self.my_layout)
 
@@ -85,7 +90,7 @@ class InputExpenseWindow(QtWidgets.QDialog):
         self.comment.setPlaceholderText('Кафе после работы')
         self.my_layout.addWidget(self.comment)
 
-    def is_mandatory_filled(self) -> bool:
+    def _is_mandatory_filled(self) -> bool:
         """ Check if mandatory fields are filled"""
         return True and self.amount.text() and self.category.currentText()
 
@@ -98,9 +103,9 @@ class InputExpenseWindow(QtWidgets.QDialog):
             'comment': self.comment.text()
         }
 
-    def on_clicked_save_btn(self) -> None:
+    def _on_clicked_save_btn(self) -> None:
         """ Reaction on clicked save button """
-        if self.is_mandatory_filled():
+        if self._is_mandatory_filled():
             self.on_clicked_save_callback(self.get_data())
             self.close()
         else:
@@ -117,26 +122,28 @@ class InputExpenseWindow(QtWidgets.QDialog):
 class MainTableWidget(QtWidgets.QWidget):
     """ Main widget for displaying expense table"""
     user_data = list[list[str]]
-    update_callback: Callable[[str, list[str]], None]
+    update_callback: Callable[[str, dict[str, str]], None]
     remove_callback: Callable[[list[str]], None]
     add_callback: Callable[[dict[str, str]], None]
+    input_win: InputExpenseWindow | None
 
     def __init__(self, parent: QtWidgets.QWidget | None = None):
         super().__init__(parent=parent)
 
         self.table = QtWidgets.QTableWidget()
         self.set_up_table()
+        self.input_win = None
 
-        add_btn = QtWidgets.QPushButton("Добавить")
-        add_btn.clicked.connect(self.on_clicked_add_button)  # type: ignore[attr-defined]
-        del_btn = QtWidgets.QPushButton("Удалить")
-        del_btn.clicked.connect(self.on_clicked_del_button)  # type: ignore[attr-defined]
-        upd_btn = QtWidgets.QPushButton("Редактировать")
-        upd_btn.clicked.connect(self.on_clicked_upd_button)  # type: ignore[attr-defined]
+        self.add_btn = QtWidgets.QPushButton("Добавить")
+        self.add_btn.clicked.connect(self._on_clicked_add_button)  # type: ignore[attr-defined]
+        self.del_btn = QtWidgets.QPushButton("Удалить")
+        self.del_btn.clicked.connect(self._on_clicked_del_button)  # type: ignore[attr-defined]
+        self.upd_btn = QtWidgets.QPushButton("Редактировать")
+        self.upd_btn.clicked.connect(self._on_clicked_upd_button)  # type: ignore[attr-defined]
 
         # horizontal layout with buttons
         h_layout = QtWidgets.QHBoxLayout()
-        for btn in [add_btn, del_btn, upd_btn]:
+        for btn in [self.add_btn, self.del_btn, self.upd_btn]:
             h_layout.addWidget(btn)
 
         # buttons under the table
@@ -150,7 +157,7 @@ class MainTableWidget(QtWidgets.QWidget):
 
         self.setLayout(v_layout)
 
-    def on_clicked_upd_button(self) -> None:
+    def _on_clicked_upd_button(self) -> None:
         idx = self.table.selectedItems()
         rows = list(set([i.row() for i in idx]))
 
@@ -176,13 +183,14 @@ class MainTableWidget(QtWidgets.QWidget):
                 'expense_date': self.user_data[row][1], 'amount': self.user_data[row][2],
                 'category': self.user_data[row][3], 'comment': self.user_data[row][4]
             }
-            InputExpenseWindow(
+            self.input_win = InputExpenseWindow(
                 self,
                 on_clicked_save_callback=partial(self.update_callback, pk),
                 ctg_options=self.cat_data,
                 msg_dict=msg_dict,
                 default_values=row_data
-            ).show()
+            )
+            self.input_win.show()
         else:
             dlg = QtWidgets.QMessageBox(
                 parent=self,
@@ -193,20 +201,21 @@ class MainTableWidget(QtWidgets.QWidget):
             dlg.setStandardButtons(QtWidgets.QMessageBox.Ok)
             dlg.exec()
 
-    def on_clicked_add_button(self) -> None:
+    def _on_clicked_add_button(self) -> None:
 
         msg_dict = {
             'window_title': 'Добавление новой записи',
             'save_button_text': 'Добавить'
         }
-        InputExpenseWindow(
+        self.input_win = InputExpenseWindow(
             self,
             on_clicked_save_callback=self.add_callback,
             ctg_options=self.cat_data,
             msg_dict=msg_dict
-        ).show()
+        )
+        self.input_win.show()
 
-    def on_clicked_del_button(self) -> None:
+    def _on_clicked_del_button(self) -> None:
         idx = self.table.selectedItems()
         if len(idx) == 0:
             dlg = QtWidgets.QMessageBox(
@@ -239,7 +248,7 @@ class MainTableWidget(QtWidgets.QWidget):
     def register_remove_callback(self, callback: Callable[[list[str]], None]) -> None:
         self.remove_callback = callback
 
-    def register_update_callback(self, callback: Callable[[str, list[str]], None]) -> None:
+    def register_update_callback(self, callback: Callable[[str, dict[str, str]], None]) -> None:
         self.update_callback = callback
 
     def set_categories(self, cat_data: list[str]) -> None:
